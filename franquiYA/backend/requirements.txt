@@ -1,6 +1,11 @@
 fastapi
-uvicorn
+uvicorn[standard]
 pdfplumber
 requests
 sqlalchemy
 python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+pydantic
+pydantic-settings
+aiohttp
