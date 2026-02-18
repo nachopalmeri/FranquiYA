@@ -1,0 +1,6 @@
+fastapi
+uvicorn
+pdfplumber
+requests
+sqlalchemy
+python-multipart
