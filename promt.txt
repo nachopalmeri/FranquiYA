@@ -1,0 +1,105 @@
+Rol: Actúa como un Lead UI/UX Designer & Frontend Architect especializado en sistemas SaaS B2B y Dashboards Operativos de alto rendimiento.
+
+Proyecto: "Grido Smart Ops" - Un sistema de gestión integral para franquicias de helados.
+Stack Tecnológico: React, Tailwind CSS, Lucide Icons, Shadcn/UI (o componentes similares).
+Dispositivos: Diseño Responsivo Híbrido (Desktop para Administración, Mobile-First para Operarios en Cámara de Frío).
+
+🎨 1. SISTEMA DE DISEÑO (Design System)
+Define y aplica estrictamente estas reglas visuales:
+
+Paleta de Colores Corporativa:
+
+Primario (Brand): #E31D2B (Rojo Grido) - Usar para CTAs principales y Alertas Críticas.
+
+Secundario (Brand): #FFFFFF (Blanco Puro) y #F3F4F6 (Gris Fondo).
+
+Acentos Semánticos:
+
+🟢 Éxito/Stock Alto: #10B981 (Emerald-500).
+
+🟠 Advertencia/Stock Bajo: #F59E0B (Amber-500).
+
+🔴 Peligro/Quiebre de Stock: #EF4444 (Red-500).
+
+🔵 Información/Clima: #3B82F6 (Blue-500).
+
+Tipografía: 'Inter' o 'Roboto'. Pesos: Bold para KPIs, Medium para tablas, Regular para cuerpo.
+
+Estilo de Componentes: "Clean Corporate". Bordes redondeados (rounded-xl), sombras suaves (shadow-sm), mucho espacio en blanco (whitespace) para reducir la carga cognitiva.
+
+Accesibilidad: Alto contraste obligatorio. Los botones deben ser grandes (mínimo 44px de altura) para ser tocados con guantes.
+
+🖥️ 2. ESPECIFICACIONES DE VISTAS (Views Specs)
+Genera una interfaz con navegación lateral (Sidebar) y las siguientes 3 vistas críticas interconectadas:
+
+A. HEADER INTELIGENTE & WIDGET CLIMÁTICO (Business Intelligence)
+En la parte superior del Dashboard, diseña un módulo de "Impacto Operativo":
+
+Layout: Card horizontal con layout tipo "Bento Grid".
+
+Elemento 1: Clima en Tiempo Real (Lanús, AR):
+
+Ícono grande dinámico (Sol/Nube/Lluvia).
+
+Temperatura actual y Sensación Térmica.
+
+Elemento 2: El "Forecast Insight" (La Clave):
+
+Si la previsión es >30°C: Muestra una tarjeta con fondo naranja suave y borde naranja. Texto: "🔥 Ola de Calor Detectada. Se proyecta +40% en ventas de Impulsivos. Revisar stock de Limón y Agua."
+
+Si la previsión es Lluvia: Tarjeta azul grisácea. Texto: "🌧️ Alerta de Lluvia. Tráfico en local bajo. Sugerencia: Activar promo Delivery."
+
+Micro-interacción: Al hacer hover, mostrar un tooltip con el gráfico de temperatura de las próximas 24hs.
+
+B. MÓDULO DE CONCILIACIÓN DE FACTURAS (The Invoice Parser)
+Diseña una interfaz de "Verificación de Ingesta" para cuando el usuario sube un PDF.
+
+Estado: "Factura #0013-00808001 Procesada con Éxito".
+
+Componente Principal: Una tabla comparativa inteligente (Split View).
+
+Columna Izquierda (Origen): Datos extraídos del PDF. Muestra el nombre "sucio" del producto (ej: "LIMON AL AGUA 7,800 KG").
+
+Columna Central (Destino): Match automático con el sistema (ej: "Limón al Agua - Balde 10L").
+
+Columna Derecha (Análisis de Costos - CRÍTICO):
+
+Precio Unitario Actual vs. Anterior.
+
+Visual: Si el precio subió, muestra un "Badge" amarillo brillante que diga ▲ 12% Inflación.
+
+Esto debe resaltar visualmente para que el dueño lo vea rápido.
+
+Acciones: Botones de "Aprobar Línea" (Check verde) o "Corregir" (Lápiz gris). Botón flotante final: "Confirmar Ingreso al Stock".
+
+C. MODO AUDITORÍA (Mobile View - "Freezer Mode")
+Esta vista es exclusiva para celular.
+
+UX: No uses tablas. Usa Tarjetas de Producto.
+
+Card de Producto:
+
+Nombre grande y legible (ej: "Dulce de Leche").
+
+Foto del producto a la izquierda.
+
+Controles de Input (Steppers):
+
+Dos filas de botones gigantes.
+
+Fila 1: [ - ] 12 [ + ] (Cerrados).
+
+Fila 2: [ ¼ ] [ ½ ] [ ¾ ] (Abiertos - Botones de selección rápida).
+
+Feedback Visual: Cuando el usuario confirma un producto, la tarjeta se tiñe suavemente de verde y pasa al fondo de la lista.
+
+Barra de Progreso: Muestra arriba "Progreso de Auditoría: 15/42 Sabores".
+
+⚡ 3. COMPORTAMIENTO & INTERACTIVIDAD
+Agrega Skeleton Loaders (barras grises parpadeantes) simulando la carga de datos del clima y del PDF.
+
+Los botones de "Alerta de Stock" deben tener un efecto de "Pulse" (latido suave) si el stock es crítico (Rojo).
+
+Asegúrate de que la tipografía de los precios (ej: "$150.000") use fuente monoespaciada o tabular para mejor lectura de números.
+
+Entrega el código completo en React modularizado, listo para producción.
