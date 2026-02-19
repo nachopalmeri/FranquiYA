@@ -204,6 +204,32 @@ def approve_line(
     db.refresh(invoice)
     return InvoiceSchema.model_validate(invoice)
 
+@router.post("/{invoice_id}/approve-all", response_model=InvoiceSchema)
+def approve_all_lines(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user)
+):
+    invoice = db.query(Invoice).filter(
+        Invoice.id == invoice_id,
+        Invoice.franchise_id == current_user.franchise_id
+    ).first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+    
+    approved_count = 0
+    for line in invoice.lines:
+        if line.is_matched and not line.approved:
+            line.approved = True
+            approved_count += 1
+    
+    db.commit()
+    db.refresh(invoice)
+    
+    response = InvoiceSchema.model_validate(invoice)
+    response.__dict__['_approved_count'] = approved_count
+    return response
+
 @router.post("/{invoice_id}/confirm", response_model=InvoiceSchema)
 def confirm_invoice(
     invoice_id: int,

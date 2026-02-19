@@ -41,10 +41,14 @@ export type ProductCategory =
   | 'palitos'
   | 'tortas'
   | 'tentaciones'
+  | 'tentacion'
   | 'familiares'
   | 'congelados'
+  | 'frizzio'
   | 'smoothies'
-  | 'insumos';
+  | 'sin_tacc'
+  | 'insumos'
+  | 'alfajores';
 
 export interface Invoice {
   id: number;
@@ -146,10 +150,14 @@ export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   'palitos': 'Palitos',
   'tortas': 'Tortas',
   'tentaciones': 'Tentaciones',
+  'tentacion': 'Tentación',
   'familiares': 'Familiares',
   'congelados': 'Congelados',
+  'frizzio': 'Frizzio',
   'smoothies': 'Smoothies',
+  'sin_tacc': 'Sin TACC',
   'insumos': 'Insumos',
+  'alfajores': 'Alfajores',
 };
 
 export const CATEGORY_ORDER: ProductCategory[] = [
@@ -159,8 +167,12 @@ export const CATEGORY_ORDER: ProductCategory[] = [
   'palitos',
   'tortas',
   'tentaciones',
+  'tentacion',
   'familiares',
   'congelados',
+  'frizzio',
   'smoothies',
+  'sin_tacc',
   'insumos',
+  'alfajores',
 ];

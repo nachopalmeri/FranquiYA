@@ -10,7 +10,7 @@ import { useAuth } from '@/components/layout/auth-provider'
 import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Search } from 'lucide-react'
+import { Search, FileText, Smartphone, BarChart3, TrendingUp } from 'lucide-react'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -74,7 +74,7 @@ export default function DashboardPage() {
 
   if (authLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E31D2B] border-t-transparent" />
       </div>
     )
@@ -86,44 +86,44 @@ export default function DashboardPage() {
       <main className="flex-1 ml-64">
         <Header />
         <div className="p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-white">Dashboard</h1>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-1">Dashboard</h1>
             <p className="text-gray-400">Bienvenido, {user?.name}</p>
           </div>
 
           <div className="mb-6 flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <Input
-                placeholder="Buscar productos..."
+                placeholder="Buscar productos en alerta..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="border-border bg-secondary pl-10 text-white placeholder:text-gray-500"
+                className="border-white/10 bg-[#1a1a1a] pl-10 text-white placeholder:text-gray-500 focus:border-[#E31D2B]/50"
               />
             </div>
             
             <div className="flex gap-2">
-              <Button
-                variant={filter === 'all' ? 'default' : 'outline'}
-                onClick={() => setFilter('all')}
-                className={filter === 'all' ? 'bg-[#E31D2B] hover:bg-[#C41925]' : 'border-border text-gray-400 hover:text-white'}
-              >
-                Todos
-              </Button>
-              <Button
-                variant={filter === 'critical' ? 'default' : 'outline'}
-                onClick={() => setFilter('critical')}
-                className={filter === 'critical' ? 'bg-red-500 hover:bg-red-600' : 'border-border text-gray-400 hover:text-white'}
-              >
-                Críticos
-              </Button>
-              <Button
-                variant={filter === 'low' ? 'default' : 'outline'}
-                onClick={() => setFilter('low')}
-                className={filter === 'low' ? 'bg-amber-500 hover:bg-amber-600' : 'border-border text-gray-400 hover:text-white'}
-              >
-                Bajo
-              </Button>
+              {[
+                { value: 'all', label: 'Todos' },
+                { value: 'critical', label: 'Críticos' },
+                { value: 'low', label: 'Bajo' }
+              ].map((btn) => (
+                <Button
+                  key={btn.value}
+                  variant={filter === btn.value ? 'default' : 'outline'}
+                  onClick={() => setFilter(btn.value as 'all' | 'critical' | 'low')}
+                  className={filter === btn.value 
+                    ? btn.value === 'critical' 
+                      ? 'bg-red-500 hover:bg-red-600' 
+                      : btn.value === 'low'
+                        ? 'bg-amber-500 hover:bg-amber-600'
+                        : 'bg-[#E31D2B] hover:bg-[#C41925]'
+                    : 'border-white/10 text-gray-400 hover:text-white hover:border-white/20'
+                  }
+                >
+                  {btn.label}
+                </Button>
+              ))}
             </div>
           </div>
 
@@ -133,53 +133,56 @@ export default function DashboardPage() {
             <div className="grid gap-6 lg:grid-cols-2">
               <StockAlerts alerts={filteredAlerts} loading={loading} />
               
-              <Card className="border-border bg-secondary">
+              <Card className="border border-white/10 bg-[#1a1a1a]">
                 <CardContent className="p-6">
-                  <h3 className="mb-4 font-semibold text-white">Acciones Rápidas</h3>
+                  <h3 className="mb-4 font-semibold text-white flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-[#E31D2B]" />
+                    Acciones Rápidas
+                  </h3>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <a
                       href="/invoices"
-                      className="card-hover flex items-center gap-3 rounded-lg border border-border bg-[#0a0a0a] p-4"
+                      className="group flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-4 transition-all duration-200 hover:border-purple-500/30 hover:bg-purple-500/10"
                     >
-                      <div className="rounded-lg bg-purple-500/10 p-2">
-                        <span className="text-2xl">📄</span>
+                      <div className="rounded-lg bg-purple-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                        <FileText className="h-5 w-5 text-purple-400" />
                       </div>
                       <div>
-                        <p className="font-medium text-white">Cargar Factura</p>
-                        <p className="text-sm text-gray-400">Procesar PDF de Helacor</p>
+                        <p className="font-medium text-white group-hover:text-purple-300">Cargar Factura</p>
+                        <p className="text-sm text-gray-500">Procesar PDF de Helacor</p>
                       </div>
                     </a>
                     <a
                       href="/audit"
-                      className="card-hover flex items-center gap-3 rounded-lg border border-border bg-[#0a0a0a] p-4"
+                      className="group flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-4 transition-all duration-200 hover:border-blue-500/30 hover:bg-blue-500/10"
                     >
-                      <div className="rounded-lg bg-blue-500/10 p-2">
-                        <span className="text-2xl">📱</span>
+                      <div className="rounded-lg bg-blue-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                        <Smartphone className="h-5 w-5 text-blue-400" />
                       </div>
                       <div>
-                        <p className="font-medium text-white">Iniciar Auditoría</p>
-                        <p className="text-sm text-gray-400">Contar stock en cámara</p>
+                        <p className="font-medium text-white group-hover:text-blue-300">Iniciar Auditoría</p>
+                        <p className="text-sm text-gray-500">Contar stock en cámara</p>
                       </div>
                     </a>
                     <a
                       href="/stock"
-                      className="card-hover flex items-center gap-3 rounded-lg border border-border bg-[#0a0a0a] p-4"
+                      className="group flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-4 transition-all duration-200 hover:border-emerald-500/30 hover:bg-emerald-500/10"
                     >
-                      <div className="rounded-lg bg-emerald-500/10 p-2">
-                        <span className="text-2xl">📊</span>
+                      <div className="rounded-lg bg-emerald-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                        <BarChart3 className="h-5 w-5 text-emerald-400" />
                       </div>
                       <div>
-                        <p className="font-medium text-white">Ver Stock</p>
-                        <p className="text-sm text-gray-400">Lista completa</p>
+                        <p className="font-medium text-white group-hover:text-emerald-300">Ver Stock</p>
+                        <p className="text-sm text-gray-500">Lista completa</p>
                       </div>
                     </a>
-                    <div className="card-hover flex items-center gap-3 rounded-lg border border-border bg-[#0a0a0a] p-4 opacity-50">
-                      <div className="rounded-lg bg-amber-500/10 p-2">
-                        <span className="text-2xl">📈</span>
+                    <div className="flex items-center gap-3 rounded-xl border border-white/5 bg-white/5 p-4 opacity-40 cursor-not-allowed">
+                      <div className="rounded-lg bg-amber-500/20 p-2">
+                        <TrendingUp className="h-5 w-5 text-amber-400" />
                       </div>
                       <div>
-                        <p className="font-medium text-white">Reportes</p>
-                        <p className="text-sm text-gray-400">Próximamente</p>
+                        <p className="font-medium text-gray-400">Reportes</p>
+                        <p className="text-sm text-gray-600">Próximamente</p>
                       </div>
                     </div>
                   </div>

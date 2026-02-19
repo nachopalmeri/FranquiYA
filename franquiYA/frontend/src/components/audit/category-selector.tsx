@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from '@/components/ui/card'
 import type { ProductCategory } from '@/lib/types'
+import { cn } from '@/lib/utils'
 
 interface CategorySelectorProps {
   categories: { value: ProductCategory; label: string; icon: string }[]
@@ -19,13 +20,17 @@ export function CategorySelector({ categories, counts, onSelect }: CategorySelec
         return (
           <Card
             key={category.value}
-            className="cursor-pointer transition-all hover:border-[#E31D2B] hover:shadow-lg"
+            className={cn(
+              "cursor-pointer border border-white/10 bg-[#1a1a1a] transition-all duration-200",
+              "hover:border-[#E31D2B]/50 hover:bg-[#1a1a1a] hover:shadow-lg hover:shadow-[#E31D2B]/10",
+              "active:scale-[0.98]"
+            )}
             onClick={() => onSelect(category.value)}
           >
             <CardContent className="p-6 text-center">
-              <span className="text-4xl">{category.icon}</span>
-              <h3 className="mt-3 font-semibold text-gray-900">{category.label}</h3>
-              <p className="mt-1 text-sm text-gray-500">{count} productos</p>
+              <span className="text-4xl block mb-3">{category.icon}</span>
+              <h3 className="font-semibold text-white">{category.label}</h3>
+              <p className="mt-1 text-sm text-gray-400">{count} productos</p>
             </CardContent>
           </Card>
         )

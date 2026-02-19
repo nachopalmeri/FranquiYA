@@ -16,12 +16,14 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 const CATEGORIES: { value: ProductCategory; label: string; icon: string }[] = [
   { value: 'sabor_7.8kg', label: 'Sabores a Granel', icon: '🍦' },
+  { value: 'tentacion', label: 'Tentación', icon: '🧁' },
   { value: 'bombones', label: 'Bombones', icon: '🍫' },
   { value: 'palitos', label: 'Palitos', icon: '🍨' },
   { value: 'tortas', label: 'Tortas', icon: '🎂' },
   { value: 'familiares', label: 'Familiares', icon: '🪣' },
-  { value: 'congelados', label: 'Congelados', icon: '❄️' },
+  { value: 'frizzio', label: 'Congelados', icon: '❄️' },
   { value: 'smoothies', label: 'Smoothies', icon: '🥤' },
+  { value: 'sin_tacc', label: 'Sin TACC', icon: '🌾' },
   { value: 'insumos', label: 'Insumos', icon: '📦' },
 ]
 
@@ -120,7 +122,7 @@ export default function AuditPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E31D2B] border-t-transparent" />
       </div>
     )
@@ -128,24 +130,25 @@ export default function AuditPage() {
 
   if (auditComplete) {
     return (
-      <div className="min-h-screen bg-gray-50 lg:ml-64">
+      <div className="min-h-screen bg-[#0a0a0a] lg:ml-64">
         <Sidebar />
         <div className="mx-auto max-w-2xl p-6 pt-20">
-          <Card className="border-2 border-emerald-500 bg-emerald-50">
+          <Card className="border border-emerald-500/30 bg-emerald-500/10 overflow-hidden">
+            <div className="h-1 w-full bg-gradient-to-r from-emerald-500 to-emerald-400" />
             <CardContent className="p-8 text-center">
-              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/30">
                 <CheckCircle2 className="h-8 w-8 text-white" />
               </div>
-              <h2 className="mb-2 text-xl font-bold text-gray-900">
+              <h2 className="mb-2 text-xl font-bold text-white">
                 ¡Auditoría Completada!
               </h2>
-              <p className="mb-6 text-gray-600">
-                Se registraron {countedItems.size} productos correctamente.
+              <p className="mb-6 text-gray-400">
+                Se registraron <span className="text-emerald-400 font-semibold">{countedItems.size}</span> productos correctamente.
               </p>
               <Button
                 onClick={handleReset}
                 variant="outline"
-                className="w-full"
+                className="w-full border-white/10 text-white hover:bg-white/10"
               >
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Nueva Auditoría
@@ -161,12 +164,12 @@ export default function AuditPage() {
 
   if (!selectedCategory) {
     return (
-      <div className="flex min-h-screen bg-gray-50">
+      <div className="flex min-h-screen bg-[#0a0a0a]">
         <Sidebar />
         <main className="flex-1 ml-64 p-6">
-          <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Auditoría de Stock</h1>
-            <p className="text-gray-500">Seleccioná una categoría para comenzar</p>
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-white mb-1">Auditoría de Stock</h1>
+            <p className="text-gray-400">Seleccioná una categoría para comenzar el conteo</p>
           </div>
           
           <CategorySelector
@@ -185,7 +188,7 @@ export default function AuditPage() {
   const pendingProducts = products.filter(p => !countedItems.has(p.id))
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
       <main className="flex-1 ml-64">
         <AuditProgressBar 
@@ -196,12 +199,12 @@ export default function AuditPage() {
         <div className="mx-auto max-w-lg p-4 pt-4">
           <div className="mb-4 flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold text-gray-900">
+              <h1 className="text-xl font-bold text-white">
                 {CATEGORIES.find(c => c.value === selectedCategory)?.label}
               </h1>
               <button
                 onClick={() => setSelectedCategory(null)}
-                className="text-sm text-[#E31D2B] hover:underline"
+                className="text-sm text-[#E31D2B] hover:text-[#ff4757] transition-colors"
               >
                 ← Cambiar categoría
               </button>
@@ -210,7 +213,7 @@ export default function AuditPage() {
               <Button
                 onClick={handleSubmitAudit}
                 disabled={submitting}
-                className="bg-[#E31D2B] hover:bg-[#C41925]"
+                className="bg-[#E31D2B] hover:bg-[#C41925] shadow-lg shadow-[#E31D2B]/30"
               >
                 {submitting ? 'Guardando...' : `Finalizar (${countedItems.size})`}
               </Button>
@@ -228,12 +231,12 @@ export default function AuditPage() {
           </div>
 
           {pendingProducts.length === 0 && countedItems.size > 0 && (
-            <Card className="mt-6 border-2 border-dashed border-emerald-300 bg-emerald-50">
+            <Card className="mt-6 border border-emerald-500/30 bg-emerald-500/10">
               <CardContent className="p-6 text-center">
-                <p className="text-emerald-700">
+                <p className="text-emerald-400">
                   Todos los productos de esta categoría han sido contados.
                 </p>
-                <p className="mt-2 text-sm text-emerald-600">
+                <p className="mt-2 text-sm text-emerald-400/70">
                   Presioná &quot;Finalizar&quot; para guardar la auditoría.
                 </p>
               </CardContent>
