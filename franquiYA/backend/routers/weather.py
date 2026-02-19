@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 import os
 import requests
+import logging
 from database import get_db
 from models.user import User
 from schemas import WeatherData, WeatherForecast
@@ -9,20 +10,26 @@ from auth import get_current_active_user
 
 router = APIRouter(prefix="/weather", tags=["weather"])
 
-OPENWEATHERMAP_API_KEY = os.getenv("OPENWEATHERMAP_API_KEY", "demo")
-WEATHER_CITY = os.getenv("WEATHER_CITY", "Lanus,AR")
+logger = logging.getLogger(__name__)
 
 @router.get("", response_model=WeatherData)
 def get_weather(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    if OPENWEATHERMAP_API_KEY == "demo":
+    api_key = os.getenv("OPENWEATHERMAP_API_KEY", "")
+    weather_city = os.getenv("WEATHER_CITY", "Lanus,AR")
+    
+    logger.info(f"API Key configured: {bool(api_key and api_key != 'demo')}")
+    logger.info(f"Weather city: {weather_city}")
+    
+    if not api_key or api_key == "demo" or api_key == "demo_key":
+        logger.warning("No API key configured, returning demo weather")
         return WeatherData(
             temp=28,
             feels_like=30,
             condition="Clear",
-            description="Cielo despejado",
+            description="Cielo despejado (demo)",
             icon="01d",
             humidity=45,
             wind_speed=12,
@@ -39,18 +46,34 @@ def get_weather(
         )
     
     try:
-        url = f"http://api.openweathermap.org/data/2.5/weather"
+        url = "http://api.openweathermap.org/data/2.5/weather"
         params = {
-            "q": WEATHER_CITY,
-            "appid": OPENWEATHERMAP_API_KEY,
+            "q": weather_city,
+            "appid": api_key,
             "units": "metric",
             "lang": "es"
         }
-        response = requests.get(url, params=params, timeout=5)
-        data = response.json()
+        logger.info(f"Fetching weather for {weather_city}")
+        response = requests.get(url, params=params, timeout=10)
         
-        forecast_url = f"http://api.openweathermap.org/data/2.5/forecast"
-        forecast_response = requests.get(forecast_url, params=params, timeout=5)
+        if response.status_code != 200:
+            logger.error(f"Weather API error: {response.status_code} - {response.text}")
+            return WeatherData(
+                temp=25,
+                feels_like=26,
+                condition="Clear",
+                description=f"Error API: {response.status_code}",
+                icon="01d",
+                humidity=50,
+                wind_speed=10,
+                forecast=[]
+            )
+        
+        data = response.json()
+        logger.info(f"Weather data received: {data.get('weather', [{}])[0].get('description', 'N/A')}")
+        
+        forecast_url = "http://api.openweathermap.org/data/2.5/forecast"
+        forecast_response = requests.get(forecast_url, params=params, timeout=10)
         forecast_data = forecast_response.json()
         
         forecast_list = []
@@ -74,14 +97,39 @@ def get_weather(
             wind_speed=data["wind"]["speed"],
             forecast=forecast_list
         )
-    except Exception:
+    except requests.exceptions.Timeout:
+        logger.error("Weather API timeout")
         return WeatherData(
             temp=25,
             feels_like=26,
             condition="Clear",
-            description="Clima no disponible",
+            description="Timeout - Clima no disponible",
             icon="01d",
             humidity=50,
             wind_speed=10,
             forecast=[]
         )
+    except Exception as e:
+        logger.error(f"Weather API error: {str(e)}")
+        return WeatherData(
+            temp=25,
+            feels_like=26,
+            condition="Clear",
+            description=f"Error: {str(e)[:50]}",
+            icon="01d",
+            humidity=50,
+            wind_speed=10,
+            forecast=[]
+        )
+
+@router.get("/debug")
+def debug_weather_config():
+    api_key = os.getenv("OPENWEATHERMAP_API_KEY", "")
+    weather_city = os.getenv("WEATHER_CITY", "Lanus,AR")
+    
+    return {
+        "api_key_configured": bool(api_key and api_key not in ["", "demo", "demo_key"]),
+        "api_key_length": len(api_key) if api_key else 0,
+        "api_key_prefix": api_key[:8] + "..." if api_key and len(api_key) > 8 else "N/A",
+        "weather_city": weather_city
+    }
