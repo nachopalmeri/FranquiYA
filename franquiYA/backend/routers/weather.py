@@ -18,18 +18,20 @@ def get_weather(
     current_user: User = Depends(get_current_active_user)
 ):
     api_key = os.getenv("OPENWEATHERMAP_API_KEY", "")
-    weather_city = os.getenv("WEATHER_CITY", "Lanus,AR")
     
-    logger.info(f"API Key configured: {bool(api_key and api_key != 'demo')}")
-    logger.info(f"Weather city: {weather_city}")
+    lat = float(os.getenv("WEATHER_LAT", "-34.7222"))
+    lon = float(os.getenv("WEATHER_LON", "-58.3945"))
     
-    if not api_key or api_key == "demo" or api_key == "demo_key":
+    logger.info(f"API Key configured: {bool(api_key and api_key not in ['demo', 'demo_key', ''])}")
+    logger.info(f"Coordinates: lat={lat}, lon={lon}")
+    
+    if not api_key or api_key in ["demo", "demo_key", ""]:
         logger.warning("No API key configured, returning demo weather")
         return WeatherData(
             temp=28,
             feels_like=30,
             condition="Clear",
-            description="Cielo despejado (demo)",
+            description="Cielo despejado (demo - sin API key)",
             icon="01d",
             humidity=45,
             wind_speed=12,
@@ -48,12 +50,13 @@ def get_weather(
     try:
         url = "http://api.openweathermap.org/data/2.5/weather"
         params = {
-            "q": weather_city,
+            "lat": lat,
+            "lon": lon,
             "appid": api_key,
             "units": "metric",
             "lang": "es"
         }
-        logger.info(f"Fetching weather for {weather_city}")
+        logger.info(f"Fetching weather for coordinates lat={lat}, lon={lon}")
         response = requests.get(url, params=params, timeout=10)
         
         if response.status_code != 200:
@@ -70,7 +73,8 @@ def get_weather(
             )
         
         data = response.json()
-        logger.info(f"Weather data received: {data.get('weather', [{}])[0].get('description', 'N/A')}")
+        city_name = data.get("name", "Lanús")
+        logger.info(f"Weather data received: {city_name} - {data.get('weather', [{}])[0].get('description', 'N/A')}")
         
         forecast_url = "http://api.openweathermap.org/data/2.5/forecast"
         forecast_response = requests.get(forecast_url, params=params, timeout=10)
@@ -125,11 +129,16 @@ def get_weather(
 @router.get("/debug")
 def debug_weather_config():
     api_key = os.getenv("OPENWEATHERMAP_API_KEY", "")
-    weather_city = os.getenv("WEATHER_CITY", "Lanus,AR")
+    lat = os.getenv("WEATHER_LAT", "-34.7222")
+    lon = os.getenv("WEATHER_LON", "-58.3945")
     
     return {
         "api_key_configured": bool(api_key and api_key not in ["", "demo", "demo_key"]),
         "api_key_length": len(api_key) if api_key else 0,
         "api_key_prefix": api_key[:8] + "..." if api_key and len(api_key) > 8 else "N/A",
-        "weather_city": weather_city
+        "coordinates": {
+            "lat": lat,
+            "lon": lon,
+            "location": "Lanús, Buenos Aires, Argentina"
+        }
     }
