@@ -23,7 +23,7 @@ export default function LoginPage() {
 
     try {
       await login(email, password)
-    } catch (err) {
+    } catch {
       setError('Email o contraseña incorrectos')
     } finally {
       setLoading(false)

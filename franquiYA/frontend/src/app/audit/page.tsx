@@ -45,7 +45,7 @@ export default function AuditPage() {
     }
   }, [authLoading, user])
 
-  const handleConfirmProduct = (productId: number, closedQty: number, openQty: number) => {
+  const handleConfirmProduct = (productId: number, _closedQty?: number, _openQty?: number) => {
     setConfirmedProducts(prev => new Set([...prev, productId]))
   }
 

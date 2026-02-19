@@ -1,6 +1,6 @@
 'use client'
 
-import { Package, AlertTriangle, FileText, Clock } from 'lucide-react'
+import { Package, AlertTriangle, FileText } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { DashboardStats } from '@/lib/types'
