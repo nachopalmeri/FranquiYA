@@ -35,21 +35,21 @@ export function StepperInput({
 
   return (
     <div>
-      <p className="mb-2 text-sm font-medium text-gray-600">{label}</p>
+      <p className="mb-2 text-sm font-medium text-gray-400">{label}</p>
       
       <div className="flex items-center gap-3">
         <Button
           type="button"
           variant="outline"
           size="lg"
-          className="h-14 w-14 rounded-xl text-2xl font-bold"
+          className="h-14 w-14 rounded-xl text-2xl font-bold bg-white/5 border-white/10 hover:bg-white/10 text-white"
           onClick={decrement}
           disabled={value <= min}
         >
           <Minus className="h-6 w-6" />
         </Button>
 
-        <div className="flex h-14 min-w-[80px] items-center justify-center rounded-xl bg-gray-100 font-mono text-2xl font-bold">
+        <div className="flex h-14 min-w-[80px] items-center justify-center rounded-xl bg-white/5 border border-white/10 font-mono text-2xl font-bold text-white">
           {value}
         </div>
 
@@ -57,7 +57,7 @@ export function StepperInput({
           type="button"
           variant="outline"
           size="lg"
-          className="h-14 w-14 rounded-xl text-2xl font-bold"
+          className="h-14 w-14 rounded-xl text-2xl font-bold bg-white/5 border-white/10 hover:bg-white/10 text-white"
           onClick={increment}
           disabled={value >= max}
         >
@@ -74,8 +74,10 @@ export function StepperInput({
               variant={value === frac ? 'default' : 'outline'}
               size="sm"
               className={cn(
-                'flex-1 rounded-lg py-2 text-sm font-medium',
-                value === frac && 'bg-[#E31D2B] hover:bg-[#C41925]'
+                'flex-1 rounded-lg py-2 text-sm font-medium transition-all duration-200',
+                value === frac 
+                  ? 'bg-[#E31D2B] hover:bg-[#C41925] text-white shadow-lg shadow-[#E31D2B]/30' 
+                  : 'bg-white/5 border-white/10 hover:bg-white/10 text-gray-300'
               )}
               onClick={() => handleFraction(frac)}
             >

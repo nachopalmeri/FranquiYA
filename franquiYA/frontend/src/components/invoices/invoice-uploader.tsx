@@ -44,45 +44,55 @@ export function InvoiceUploader({ onUpload, loading }: InvoiceUploaderProps) {
     }
   }, [])
 
-  const handleUpload = async () => {
+  const handleUpload = async (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
     if (file) {
       await onUpload(file)
       setFile(null)
     }
   }
 
+  const handleCancel = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setFile(null)
+  }
+
   return (
-    <Card>
+    <Card className="border-border bg-secondary">
       <CardContent className="p-6">
         <div
           className={cn(
             'relative rounded-xl border-2 border-dashed p-8 transition-colors',
-            dragActive ? 'border-[#E31D2B] bg-red-50' : 'border-gray-200',
-            file && 'border-emerald-500 bg-emerald-50'
+            dragActive ? 'border-[#E31D2B] bg-[#E31D2B]/10' : 'border-border',
+            file && 'border-emerald-500 bg-emerald-500/10'
           )}
           onDragEnter={handleDrag}
           onDragLeave={handleDrag}
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <input
-            type="file"
-            accept=".pdf"
-            onChange={handleChange}
-            className="absolute inset-0 cursor-pointer opacity-0"
-          />
+          {!file && (
+            <input
+              type="file"
+              accept=".pdf"
+              onChange={handleChange}
+              className="absolute inset-0 cursor-pointer opacity-0"
+            />
+          )}
 
-          <div className="flex flex-col items-center justify-center text-center">
+          <div className="flex flex-col items-center justify-center text-center pointer-events-none">
             {file ? (
               <>
-                <div className="mb-4 rounded-full bg-emerald-100 p-3">
-                  <FileText className="h-8 w-8 text-emerald-600" />
+                <div className="mb-4 rounded-full bg-emerald-500/20 p-3">
+                  <FileText className="h-8 w-8 text-emerald-500" />
                 </div>
-                <p className="mb-2 font-medium text-gray-900">{file.name}</p>
-                <p className="mb-4 text-sm text-gray-500">
+                <p className="mb-2 font-medium text-white">{file.name}</p>
+                <p className="mb-4 text-sm text-gray-400">
                   {(file.size / 1024).toFixed(1)} KB
                 </p>
-                <div className="flex gap-3">
+                <div className="flex gap-3 pointer-events-auto">
                   <Button
                     onClick={handleUpload}
                     disabled={loading}
@@ -102,8 +112,9 @@ export function InvoiceUploader({ onUpload, loading }: InvoiceUploaderProps) {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => setFile(null)}
+                    onClick={handleCancel}
                     disabled={loading}
+                    className="border-border text-gray-400 hover:text-white"
                   >
                     <X className="mr-2 h-4 w-4" />
                     Cancelar
@@ -112,16 +123,16 @@ export function InvoiceUploader({ onUpload, loading }: InvoiceUploaderProps) {
               </>
             ) : (
               <>
-                <div className="mb-4 rounded-full bg-gray-100 p-3">
-                  <Upload className="h-8 w-8 text-gray-600" />
+                <div className="mb-4 rounded-full bg-muted p-3">
+                  <Upload className="h-8 w-8 text-gray-400" />
                 </div>
-                <p className="mb-1 font-medium text-gray-900">
+                <p className="mb-1 font-medium text-white">
                   Arrastra tu factura PDF aquí
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-400">
                   o haz click para seleccionar el archivo
                 </p>
-                <p className="mt-2 text-xs text-gray-400">
+                <p className="mt-2 text-xs text-gray-500">
                   Facturas de Helacor S.A. • Formato PDF
                 </p>
               </>

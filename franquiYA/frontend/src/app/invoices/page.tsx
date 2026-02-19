@@ -1,43 +1,20 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { InvoiceUploader } from '@/components/invoices/invoice-uploader'
 import { InvoiceTable } from '@/components/invoices/invoice-table'
-import type { Invoice, Product } from '@/lib/types'
+import type { Invoice } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 export default function InvoicesPage() {
-  const { user, loading: authLoading } = useAuth()
+  const { loading: authLoading } = useAuth()
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null)
-  const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(false)
   const [uploading, setUploading] = useState(false)
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const token = localStorage.getItem('token')
-        if (!token) return
-
-        const res = await fetch(`${API_URL}/stock`, {
-          headers: { Authorization: `Bearer ${token}` }
-        })
-        if (res.ok) {
-          setProducts(await res.json())
-        }
-      } catch (error) {
-        console.error('Failed to fetch products:', error)
-      }
-    }
-
-    if (!authLoading && user) {
-      fetchProducts()
-    }
-  }, [authLoading, user])
 
   const handleUpload = async (file: File) => {
     setUploading(true)
@@ -128,14 +105,14 @@ export default function InvoicesPage() {
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
       <main className="flex-1 ml-64">
         <Header />
         <div className="p-6">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold text-gray-900">Conciliación de Facturas</h1>
-            <p className="text-gray-500">Procesa facturas PDF de Helacor S.A.</p>
+            <h1 className="text-2xl font-bold text-white">Conciliación de Facturas</h1>
+            <p className="text-gray-400">Procesa facturas PDF de Helacor S.A.</p>
           </div>
 
           <div className="space-y-6">
@@ -144,7 +121,6 @@ export default function InvoicesPage() {
             {currentInvoice && (
               <InvoiceTable
                 invoice={currentInvoice}
-                products={products}
                 onApproveLine={handleApproveLine}
                 onConfirm={handleConfirm}
                 loading={loading}

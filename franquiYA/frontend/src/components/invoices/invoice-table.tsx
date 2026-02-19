@@ -12,13 +12,12 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Invoice, Product } from '@/lib/types'
+import type { Invoice } from '@/lib/types'
 import { formatPrice } from '@/lib/utils'
 import { PriceBadge } from './price-badge'
 
 interface InvoiceTableProps {
   invoice: Invoice | null
-  products: Product[]
   onApproveLine: (lineId: number, productId?: number) => void
   onConfirm: () => void
   loading: boolean
@@ -36,10 +35,10 @@ export function InvoiceTable({
   const approvedLines = invoice.lines.filter(l => l.approved)
 
   return (
-    <Card>
+    <Card className="border-border bg-secondary">
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-white">
             {invoice.status === 'confirmed' ? (
               <CheckCircle2 className="h-5 w-5 text-emerald-500" />
             ) : (
@@ -47,9 +46,9 @@ export function InvoiceTable({
             )}
             Factura #{invoice.number}
           </CardTitle>
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-gray-400">
             Fecha: {new Date(invoice.date).toLocaleDateString('es-AR')} • 
-            Total: <span className="font-mono font-semibold">{formatPrice(invoice.total)}</span>
+            Total: <span className="font-mono font-semibold text-white">{formatPrice(invoice.total)}</span>
           </p>
         </div>
         {invoice.status === 'pending' && pendingLines.length === 0 && (
@@ -65,45 +64,45 @@ export function InvoiceTable({
       </CardHeader>
 
       <CardContent>
-        <div className="rounded-lg border">
+        <div className="rounded-lg border border-border">
           <Table>
             <TableHeader>
-              <TableRow className="bg-gray-50">
-                <TableHead className="w-[25%]">Origen (PDF)</TableHead>
-                <TableHead className="w-[20%]">Match Sistema</TableHead>
-                <TableHead className="w-[10%] text-right">Cantidad</TableHead>
-                <TableHead className="w-[15%] text-right">P. Unitario</TableHead>
-                <TableHead className="w-[15%] text-right">Análisis</TableHead>
-                <TableHead className="w-[15%]">Acciones</TableHead>
+              <TableRow className="bg-muted hover:bg-muted">
+                <TableHead className="w-[25%] text-gray-400">Origen (PDF)</TableHead>
+                <TableHead className="w-[20%] text-gray-400">Match Sistema</TableHead>
+                <TableHead className="w-[10%] text-right text-gray-400">Cantidad</TableHead>
+                <TableHead className="w-[15%] text-right text-gray-400">P. Unitario</TableHead>
+                <TableHead className="w-[15%] text-right text-gray-400">Análisis</TableHead>
+                <TableHead className="w-[15%] text-gray-400">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {invoice.lines.map((line) => (
                 <TableRow 
                   key={line.id}
-                  className={line.approved ? 'bg-emerald-50' : ''}
+                  className={line.approved ? 'bg-emerald-500/10' : 'border-border'}
                 >
                   <TableCell>
-                    <p className="font-medium text-gray-900">{line.raw_name}</p>
+                    <p className="font-medium text-white">{line.raw_name}</p>
                     <p className="text-xs text-gray-500">{line.unit}</p>
                   </TableCell>
                   <TableCell>
                     {line.is_matched ? (
-                      <Badge variant="default" className="bg-emerald-600">
+                      <Badge className="bg-emerald-600 text-white">
                         {line.matched_name}
                       </Badge>
                     ) : (
-                      <Badge variant="outline" className="border-amber-500 text-amber-600">
+                      <Badge variant="outline" className="border-amber-500 text-amber-500">
                         Sin match
                       </Badge>
                     )}
                   </TableCell>
-                  <TableCell className="text-right font-mono">
+                  <TableCell className="text-right font-mono text-white">
                     {line.quantity}
                   </TableCell>
                   <TableCell className="text-right">
                     <div>
-                      <p className="font-mono font-medium">{formatPrice(line.unit_price)}</p>
+                      <p className="font-mono font-medium text-white">{formatPrice(line.unit_price)}</p>
                       {line.previous_price && (
                         <p className="text-xs text-gray-500 line-through">
                           {formatPrice(line.previous_price)}
@@ -122,7 +121,7 @@ export function InvoiceTable({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-emerald-600 hover:bg-emerald-50"
+                          className="text-emerald-500 hover:bg-emerald-500/10"
                           onClick={() => onApproveLine(line.id)}
                           disabled={line.approved || loading}
                         >
@@ -131,7 +130,7 @@ export function InvoiceTable({
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="text-gray-400 hover:bg-gray-50"
+                          className="text-gray-400 hover:bg-muted"
                           disabled={loading}
                         >
                           <Edit2 className="h-4 w-4" />
@@ -139,7 +138,7 @@ export function InvoiceTable({
                       </div>
                     )}
                     {line.approved && (
-                      <Badge variant="outline" className="border-emerald-500 text-emerald-600">
+                      <Badge variant="outline" className="border-emerald-500 text-emerald-500">
                         <Check className="mr-1 h-3 w-3" />
                         Aprobado
                       </Badge>
@@ -151,17 +150,17 @@ export function InvoiceTable({
           </Table>
         </div>
 
-        <div className="mt-4 flex items-center justify-between rounded-lg bg-gray-50 p-4">
+        <div className="mt-4 flex items-center justify-between rounded-lg bg-muted p-4">
           <div className="flex gap-6">
             <div>
-              <p className="text-sm text-gray-500">Líneas aprobadas</p>
-              <p className="text-lg font-semibold text-emerald-600">
+              <p className="text-sm text-gray-400">Líneas aprobadas</p>
+              <p className="text-lg font-semibold text-emerald-500">
                 {approvedLines.length} / {invoice.lines.length}
               </p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Total a ingresar</p>
-              <p className="font-mono text-lg font-semibold">
+              <p className="text-sm text-gray-400">Total a ingresar</p>
+              <p className="font-mono text-lg font-semibold text-white">
                 {formatPrice(invoice.total)}
               </p>
             </div>

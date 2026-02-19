@@ -31,21 +31,21 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100 p-4">
-      <Card className="w-full max-w-md shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] p-4">
+      <Card className="w-full max-w-md border-border bg-secondary shadow-xl">
         <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E31D2B]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E31D2B] shadow-lg shadow-[#E31D2B]/20">
             <IceCreamBowl className="h-10 w-10 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold">Grido Smart Ops</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-2xl font-bold text-white">Grido Smart Ops</CardTitle>
+          <CardDescription className="text-gray-400">
             Ingresa a tu cuenta para continuar
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -54,14 +54,14 @@ export default function LoginPage() {
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
+                  className="border-border bg-[#0a0a0a] pl-10 text-white placeholder:text-gray-500"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password" className="text-gray-300">Contraseña</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                 <Input
@@ -70,13 +70,13 @@ export default function LoginPage() {
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="pl-10 pr-10"
+                  className="border-border bg-[#0a0a0a] pl-10 pr-10 text-white placeholder:text-gray-500"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-3 text-gray-400 hover:text-white"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -88,7 +88,7 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-50 p-3 text-sm text-red-600">
+              <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400">
                 {error}
               </div>
             )}
@@ -109,9 +109,9 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 rounded-lg bg-gray-50 p-4">
-            <p className="text-center text-sm text-gray-600">
-              Demo: <span className="font-mono">admin@grido.com</span> / <span className="font-mono">admin123</span>
+          <div className="mt-6 rounded-lg bg-[#0a0a0a] border border-border p-4">
+            <p className="text-center text-sm text-gray-400">
+              Demo: <span className="font-mono text-white">admin@grido.com</span> / <span className="font-mono text-white">admin123</span>
             </p>
           </div>
         </CardContent>

@@ -11,7 +11,7 @@ interface PriceBadgeProps {
 export function PriceBadge({ change }: PriceBadgeProps) {
   if (change === 0) {
     return (
-      <Badge variant="outline" className="gap-1 border-gray-300 text-gray-600">
+      <Badge variant="outline" className="gap-1 border-border text-gray-400">
         <Minus className="h-3 w-3" />
         Sin cambio
       </Badge>
@@ -26,7 +26,7 @@ export function PriceBadge({ change }: PriceBadgeProps) {
       className={cn(
         'gap-1 font-mono font-semibold',
         isHighInflation 
-          ? 'animate-pulse bg-red-500 text-white shadow-lg shadow-red-200' 
+          ? 'animate-pulse bg-red-500 text-white shadow-lg shadow-red-500/20' 
           : isIncrease 
             ? 'bg-amber-500 text-white' 
             : 'bg-emerald-500 text-white'

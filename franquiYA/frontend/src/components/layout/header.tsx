@@ -7,6 +7,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import type { WeatherData, WeatherInsight } from '@/lib/types'
 import { getWeatherInsight, getWeatherIcon } from '@/lib/utils'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+
 export function Header() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -18,7 +20,7 @@ export function Header() {
         const token = localStorage.getItem('token')
         if (!token) return
 
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/weather`, {
+        const res = await fetch(`${API_URL}/weather`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.ok) {
@@ -37,10 +39,10 @@ export function Header() {
   }, [])
 
   return (
-    <header className="sticky top-0 z-30 border-b bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-border bg-[#0a0a0a]/95 backdrop-blur">
       <div className="flex h-16 items-center justify-between px-6">
         <div className="flex items-center gap-4">
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-lg font-semibold text-white">
             {new Date().toLocaleDateString('es-AR', { 
               weekday: 'long', 
               day: 'numeric', 
@@ -57,18 +59,18 @@ export function Header() {
             </div>
           ) : weather ? (
             <div className="flex items-center gap-4">
-              <Card className="border shadow-sm">
+              <Card className="border-border bg-secondary">
                 <CardContent className="flex items-center gap-3 px-4 py-2">
                   <span className="text-3xl">{getWeatherIcon(weather.condition)}</span>
                   <div className="flex flex-col">
                     <div className="flex items-center gap-2">
-                      <Thermometer className="h-4 w-4 text-gray-500" />
-                      <span className="text-lg font-semibold">{Math.round(weather.temp)}°C</span>
-                      <span className="text-sm text-gray-500">
+                      <Thermometer className="h-4 w-4 text-gray-400" />
+                      <span className="text-lg font-semibold text-white">{Math.round(weather.temp)}°C</span>
+                      <span className="text-sm text-gray-400">
                         ST: {Math.round(weather.feels_like)}°C
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
+                    <div className="flex items-center gap-3 text-xs text-gray-400">
                       <span className="flex items-center gap-1">
                         <Droplets className="h-3 w-3" />
                         {weather.humidity}%
@@ -83,12 +85,12 @@ export function Header() {
               </Card>
 
               {insight && (
-                <Card className={`border-2 ${insight.bgColor} ${insight.borderColor}`}>
+                <Card className={`border-2 ${insight.bgColor.replace('bg-orange-50', 'bg-orange-500/10').replace('bg-slate-100', 'bg-blue-500/10')} ${insight.borderColor.replace('border-orange-300', 'border-orange-500/30').replace('border-slate-300', 'border-blue-500/30')}`}>
                   <CardContent className="flex items-center gap-3 px-4 py-2">
                     <span className="text-2xl">{insight.icon}</span>
                     <div className="flex flex-col">
-                      <span className="text-sm font-medium text-gray-800">{insight.message}</span>
-                      <span className="text-xs text-gray-600">{insight.action}</span>
+                      <span className="text-sm font-medium text-white">{insight.message}</span>
+                      <span className="text-xs text-gray-400">{insight.action}</span>
                     </div>
                   </CardContent>
                 </Card>
