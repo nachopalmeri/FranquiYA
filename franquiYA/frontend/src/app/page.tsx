@@ -8,6 +8,8 @@ import { StockAlerts } from '@/components/stock/alert-badge'
 import type { DashboardStats, StockAlert } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -21,10 +23,10 @@ export default function DashboardPage() {
         if (!token) return
 
         const [statsRes, alertsRes] = await Promise.all([
-          fetch('http://localhost:8000/api/dashboard/stats', {
+          fetch(`${API_URL}/dashboard/stats`, {
             headers: { Authorization: `Bearer ${token}` }
           }),
-          fetch('http://localhost:8000/api/stock/alerts', {
+          fetch(`${API_URL}/stock/alerts`, {
             headers: { Authorization: `Bearer ${token}` }
           })
         ])

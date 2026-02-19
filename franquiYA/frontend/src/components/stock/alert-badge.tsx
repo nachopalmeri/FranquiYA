@@ -4,7 +4,6 @@ import { AlertTriangle, Package } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import type { StockAlert } from '@/lib/types'
-import { formatPrice } from '@/lib/utils'
 
 interface StockAlertsProps {
   alerts: StockAlert[]

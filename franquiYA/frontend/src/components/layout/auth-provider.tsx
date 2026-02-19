@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userData = await api.auth.me()
         setUser(userData)
-      } catch (error) {
+      } catch {
         localStorage.removeItem('token')
         if (pathname !== '/login') {
           router.push('/login')

@@ -12,8 +12,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import type { Invoice, InvoiceLine, Product } from '@/lib/types'
-import { formatPrice, getPriceChangeBadge } from '@/lib/utils'
+import type { Invoice, Product } from '@/lib/types'
+import { formatPrice } from '@/lib/utils'
 import { PriceBadge } from './price-badge'
 
 interface InvoiceTableProps {
@@ -26,7 +26,6 @@ interface InvoiceTableProps {
 
 export function InvoiceTable({ 
   invoice, 
-  products, 
   onApproveLine, 
   onConfirm,
   loading 

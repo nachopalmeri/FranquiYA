@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Cloud, Sun, CloudRain, Thermometer, Droplets, Wind } from 'lucide-react'
+import { Thermometer, Droplets, Wind } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { WeatherData, WeatherInsight } from '@/lib/types'
@@ -18,7 +18,7 @@ export function Header() {
         const token = localStorage.getItem('token')
         if (!token) return
 
-        const res = await fetch('http://localhost:8000/api/weather', {
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/weather`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.ok) {

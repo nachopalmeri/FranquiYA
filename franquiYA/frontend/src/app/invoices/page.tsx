@@ -8,6 +8,8 @@ import { InvoiceTable } from '@/components/invoices/invoice-table'
 import type { Invoice, Product } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+
 export default function InvoicesPage() {
   const { user, loading: authLoading } = useAuth()
   const [currentInvoice, setCurrentInvoice] = useState<Invoice | null>(null)
@@ -21,7 +23,7 @@ export default function InvoicesPage() {
         const token = localStorage.getItem('token')
         if (!token) return
 
-        const res = await fetch('http://localhost:8000/api/stock', {
+        const res = await fetch(`${API_URL}/stock`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.ok) {
@@ -46,7 +48,7 @@ export default function InvoicesPage() {
       const formData = new FormData()
       formData.append('file', file)
 
-      const res = await fetch('http://localhost:8000/api/invoices/upload', {
+      const res = await fetch(`${API_URL}/invoices/upload`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` },
         body: formData
@@ -71,7 +73,7 @@ export default function InvoicesPage() {
       if (!token) return
 
       const res = await fetch(
-        `http://localhost:8000/api/invoices/${currentInvoice.id}/lines/${lineId}/approve`,
+        `${API_URL}/invoices/${currentInvoice.id}/lines/${lineId}/approve`,
         {
           method: 'POST',
           headers: {
@@ -100,7 +102,7 @@ export default function InvoicesPage() {
       if (!token) return
 
       const res = await fetch(
-        `http://localhost:8000/api/invoices/${currentInvoice.id}/confirm`,
+        `${API_URL}/invoices/${currentInvoice.id}/confirm`,
         {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` }

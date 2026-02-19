@@ -10,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CheckCircle2, RotateCcw } from 'lucide-react'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+
 export default function AuditPage() {
   const { user, loading: authLoading } = useAuth()
   const [products, setProducts] = useState<Product[]>([])
@@ -24,7 +26,7 @@ export default function AuditPage() {
         const token = localStorage.getItem('token')
         if (!token) return
 
-        const res = await fetch('http://localhost:8000/api/audit/products', {
+        const res = await fetch(`${API_URL}/audit/products`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         if (res.ok) {
@@ -53,7 +55,7 @@ export default function AuditPage() {
       const token = localStorage.getItem('token')
       if (!token) return
 
-      const res = await fetch('http://localhost:8000/api/audit/submit', {
+      const res = await fetch(`${API_URL}/audit/submit`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,

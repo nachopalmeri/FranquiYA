@@ -7,7 +7,6 @@ import {
   FileText, 
   ClipboardCheck, 
   Package, 
-  Settings,
   LogOut,
   IceCreamBowl
 } from 'lucide-react'
