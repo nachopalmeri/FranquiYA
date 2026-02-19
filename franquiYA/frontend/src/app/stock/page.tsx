@@ -22,9 +22,13 @@ const CATEGORY_OPTIONS: { value: ProductCategory | 'all'; label: string }[] = [
   { value: 'palitos', label: 'Palitos' },
   { value: 'tortas', label: 'Tortas' },
   { value: 'tentaciones', label: 'Tentaciones' },
+  { value: 'tentacion', label: 'Tentación' },
   { value: 'familiares', label: 'Familiares' },
   { value: 'congelados', label: 'Congelados' },
+  { value: 'frizzio', label: 'Frizzio' },
   { value: 'smoothies', label: 'Smoothies' },
+  { value: 'sin_tacc', label: 'Sin TACC' },
+  { value: 'alfajores', label: 'Alfajores' },
   { value: 'insumos', label: 'Insumos' },
 ]
 
@@ -120,24 +124,28 @@ export default function StockPage() {
 
   if (authLoading || loading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E31D2B] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
+    <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
       <main className="flex-1 ml-64">
         <Header />
         <div className="p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Stock</h1>
-              <p className="text-gray-500">{filteredProducts.length} productos</p>
+              <h1 className="text-3xl font-bold text-white">Stock</h1>
+              <p className="text-gray-400">{filteredProducts.length} productos</p>
             </div>
-            <Button onClick={exportToExcel} variant="outline">
+            <Button 
+              onClick={exportToExcel} 
+              variant="outline"
+              className="border-white/10 text-white hover:bg-white/10"
+            >
               <Download className="mr-2 h-4 w-4" />
               Exportar Excel
             </Button>

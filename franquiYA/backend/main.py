@@ -8,7 +8,8 @@ from routers import (
     invoices_router,
     weather_router,
     audit_router,
-    dashboard_router
+    dashboard_router,
+    franchise_router
 )
 
 Base.metadata.create_all(bind=engine)
@@ -39,6 +40,7 @@ app.include_router(invoices_router, prefix="/api")
 app.include_router(weather_router, prefix="/api")
 app.include_router(audit_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(franchise_router, prefix="/api")
 
 @app.get("/")
 def read_root():

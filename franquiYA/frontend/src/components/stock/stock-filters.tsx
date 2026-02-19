@@ -40,24 +40,24 @@ export function StockFilters({
   categoryOptions
 }: StockFiltersProps) {
   return (
-    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-lg border border-border bg-secondary p-4">
+    <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-white/10 bg-[#1a1a1a] p-4">
       <div className="relative flex-1 min-w-[200px]">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
         <Input
           placeholder="Buscar producto..."
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
-          className="border-border bg-[#0a0a0a] pl-10 text-white placeholder:text-gray-500"
+          className="border-white/10 bg-white/5 pl-10 text-white placeholder:text-gray-500 focus:border-[#E31D2B]/50"
         />
       </div>
 
       <Select value={categoryFilter} onValueChange={(v) => onCategoryChange(v as ProductCategory | 'all')}>
-        <SelectTrigger className="w-[180px] border-border bg-[#0a0a0a] text-white">
+        <SelectTrigger className="w-[180px] border-white/10 bg-white/5 text-white">
           <SelectValue placeholder="Categoría" />
         </SelectTrigger>
-        <SelectContent className="bg-secondary border-border">
+        <SelectContent className="bg-[#1a1a1a] border-white/10">
           {categoryOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-muted">
+            <SelectItem key={opt.value} value={opt.value} className="text-white hover:bg-white/10 focus:bg-white/10">
               {opt.label}
             </SelectItem>
           ))}
@@ -65,26 +65,26 @@ export function StockFilters({
       </Select>
 
       <Select value={stockFilter} onValueChange={(v) => onStockFilterChange(v as 'all' | 'critical' | 'low' | 'ok')}>
-        <SelectTrigger className="w-[140px] border-border bg-[#0a0a0a] text-white">
+        <SelectTrigger className="w-[140px] border-white/10 bg-white/5 text-white">
           <SelectValue placeholder="Estado" />
         </SelectTrigger>
-        <SelectContent className="bg-secondary border-border">
-          <SelectItem value="all" className="text-white hover:bg-muted">Todos</SelectItem>
-          <SelectItem value="critical" className="text-white hover:bg-muted">Crítico</SelectItem>
-          <SelectItem value="low" className="text-white hover:bg-muted">Bajo</SelectItem>
-          <SelectItem value="ok" className="text-white hover:bg-muted">OK</SelectItem>
+        <SelectContent className="bg-[#1a1a1a] border-white/10">
+          <SelectItem value="all" className="text-white hover:bg-white/10 focus:bg-white/10">Todos</SelectItem>
+          <SelectItem value="critical" className="text-white hover:bg-white/10 focus:bg-white/10">Crítico</SelectItem>
+          <SelectItem value="low" className="text-white hover:bg-white/10 focus:bg-white/10">Bajo</SelectItem>
+          <SelectItem value="ok" className="text-white hover:bg-white/10 focus:bg-white/10">OK</SelectItem>
         </SelectContent>
       </Select>
 
       <div className="flex items-center gap-2">
         <Select value={sortBy} onValueChange={(v) => onSortByChange(v as 'name' | 'stock' | 'price')}>
-          <SelectTrigger className="w-[140px] border-border bg-[#0a0a0a] text-white">
+          <SelectTrigger className="w-[140px] border-white/10 bg-white/5 text-white">
             <SelectValue placeholder="Ordenar por" />
           </SelectTrigger>
-          <SelectContent className="bg-secondary border-border">
-            <SelectItem value="name" className="text-white hover:bg-muted">Nombre</SelectItem>
-            <SelectItem value="stock" className="text-white hover:bg-muted">Stock</SelectItem>
-            <SelectItem value="price" className="text-white hover:bg-muted">Precio</SelectItem>
+          <SelectContent className="bg-[#1a1a1a] border-white/10">
+            <SelectItem value="name" className="text-white hover:bg-white/10 focus:bg-white/10">Nombre</SelectItem>
+            <SelectItem value="stock" className="text-white hover:bg-white/10 focus:bg-white/10">Stock</SelectItem>
+            <SelectItem value="price" className="text-white hover:bg-white/10 focus:bg-white/10">Precio</SelectItem>
           </SelectContent>
         </Select>
 
@@ -92,7 +92,7 @@ export function StockFilters({
           variant="outline"
           size="icon"
           onClick={() => onSortOrderChange(sortOrder === 'asc' ? 'desc' : 'asc')}
-          className="border-border text-gray-400 hover:text-white"
+          className="border-white/10 bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
         >
           {sortOrder === 'asc' ? (
             <ArrowUp className="h-4 w-4" />

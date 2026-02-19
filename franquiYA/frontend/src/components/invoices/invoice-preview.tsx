@@ -61,7 +61,7 @@ export function InvoicePreview({
                 <div>
                   <span>Factura #{invoice.number}</span>
                   <p className="text-sm font-normal text-gray-400 mt-1">
-                    {invoice.supplier} • {new Date(invoice.date).toLocaleDateString('es-AR')}
+                    {invoice.supplier} • {invoice.date ? new Date(invoice.date).toLocaleDateString('es-AR') : 'Sin fecha'}
                   </p>
                 </div>
               </CardTitle>
