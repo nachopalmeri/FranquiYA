@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { InvoiceUploader } from '@/components/invoices/invoice-uploader'
 import { InvoicePreview } from '@/components/invoices/invoice-preview'
+import { ChatWidget } from '@/components/chat/chat-widget'
 import type { Invoice } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 
@@ -207,6 +208,7 @@ export default function InvoicesPage() {
             )}
           </div>
         </div>
+        <ChatWidget />
       </main>
     </div>
   )

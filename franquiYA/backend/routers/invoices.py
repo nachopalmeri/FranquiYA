@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 import io
 import re
+import os
+import json
 import logging
 from datetime import datetime
 from database import get_db
@@ -15,6 +17,65 @@ from auth import get_current_active_user, get_admin_user
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 logger = logging.getLogger(__name__)
 
+def parse_with_gemini(text: str) -> Optional[dict]:
+    """Usar Gemini AI para extraer datos estructurados del texto del PDF"""
+    api_key = os.getenv("GOOGLE_API_KEY", "")
+    
+    if not api_key:
+        logger.warning("GOOGLE_API_KEY not configured, falling back to regex parser")
+        return None
+    
+    try:
+        import google.generativeai as genai
+        
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        prompt = f"""Extrae los datos de esta factura de Helacor S.A. (proveedor de helados Grido).
+
+TEXTO DE LA FACTURA:
+{text}
+
+Devuelve SOLO un JSON válido con esta estructura exacta (sin markdown, sin explicaciones):
+{{
+    "numero_factura": "número de factura o null",
+    "fecha": "DD/MM/YYYY o null",
+    "lineas": [
+        {{
+            "producto": "nombre del producto",
+            "cantidad": numero,
+            "precio_unitario": numero,
+            "total": numero
+        }}
+    ],
+    "total": numero
+}}
+
+IMPORTANTE:
+- Extrae TODAS las líneas de productos
+- Los precios están en pesos argentinos
+- Si hay productos con diferentes unidades (7.8kg, 1lt, etc), inclúyelos
+- Devuelve solo el JSON, nada más"""
+
+        response = model.generate_content(prompt)
+        response_text = response.text.strip()
+        
+        # Limpiar posibles caracteres de markdown
+        if response_text.startswith("```"):
+            response_text = re.sub(r'^```json?\s*', '', response_text)
+            response_text = re.sub(r'\s*```$', '', response_text)
+        
+        data = json.loads(response_text)
+        logger.info(f"Gemini extracted {len(data.get('lineas', []))} lines")
+        return data
+        
+    except json.JSONDecodeError as e:
+        logger.error(f"Gemini JSON parse error: {e}")
+        return None
+    except Exception as e:
+        logger.error(f"Gemini API error: {e}")
+        return None
+
 def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict:
     import pdfplumber
     
@@ -26,17 +87,55 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
     
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
-            for page_num, page in enumerate(pdf.pages):
+            for page in pdf.pages:
                 text = page.extract_text()
                 if text:
                     raw_text += text + "\n"
+        
+        # INTENTAR PRIMERO CON GEMINI
+        gemini_result = parse_with_gemini(raw_text)
+        
+        if gemini_result and gemini_result.get("lineas"):
+            logger.info("Using Gemini parsed data")
+            
+            invoice_number = gemini_result.get("numero_factura", "")
+            
+            if gemini_result.get("fecha"):
+                try:
+                    invoice_date = datetime.strptime(gemini_result["fecha"], "%d/%m/%Y")
+                except:
+                    pass
+            
+            for linea in gemini_result.get("lineas", []):
+                if linea.get("producto") and linea.get("cantidad"):
+                    lines_data.append({
+                        "raw_name": linea["producto"],
+                        "quantity": float(linea["cantidad"]),
+                        "unit_price": float(linea.get("precio_unitario", 0)),
+                        "total": float(linea.get("total", 0)),
+                        "unit": "7.8kg"
+                    })
+            
+            total = float(gemini_result.get("total", 0))
+            
+            if lines_data:
+                return {
+                    "number": invoice_number or f"TEMP-{datetime.now().strftime('%Y%m%d%H%M%S')}",
+                    "date": invoice_date or datetime.now(),
+                    "total": total,
+                    "lines": lines_data,
+                    "raw_text": raw_text[:2000]
+                }
+        
+        # FALLBACK: Parser con pdfplumber si Gemini falla
+        logger.info("Gemini failed or returned no data, using fallback parser")
+        
+        with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            for page_num, page in enumerate(pdf.pages):
+                text = page.extract_text()
                 
-                logger.info(f"Processing page {page_num + 1}")
-                
-                # ESTRATEGIA 1: Tablas con bordes estándar
+                # ESTRATEGIA 1: Tablas con bordes
                 tables = page.extract_tables()
-                logger.info(f"Strategy 1 (borders): Found {len(tables)} tables")
-                
                 for table in tables:
                     for row in table:
                         if row and len(row) >= 4:
@@ -62,16 +161,15 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
                                         "unit": "7.8kg"
                                     })
                                     total += line_total if line_total > 0 else qty * price
-                            except (ValueError, TypeError, IndexError) as e:
+                            except (ValueError, TypeError, IndexError):
                                 continue
                 
-                # ESTRATEGIA 2: Tablas sin bordes (text-based)
+                # ESTRATEGIA 2: Tablas sin bordes
                 if not lines_data:
                     tables_text = page.extract_tables({
                         "vertical_strategy": "text",
                         "horizontal_strategy": "text"
                     })
-                    logger.info(f"Strategy 2 (text-based): Found {len(tables_text)} tables")
                     
                     for table in tables_text:
                         for row in table:
@@ -81,7 +179,6 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
                                     if not name or len(name) < 3:
                                         continue
                                     
-                                    # Buscar números en las últimas columnas
                                     numbers = []
                                     for cell in row[1:]:
                                         if cell:
@@ -105,98 +202,44 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
                                         total += line_total
                                 except (ValueError, TypeError):
                                     continue
-                
-                # ESTRATEGIA 3: Regex sobre texto plano
-                if not lines_data and text:
-                    logger.info("Strategy 3: Trying regex on plain text")
-                    
-                    # Patrones para líneas de factura
-                    patterns = [
-                        # "DULCE DE LECHE 7.800 KG 3 24,545.06 73,635.18"
-                        r'([A-ZÁÉÍÓÚÑ\s]+?)\s+[\d.,]+\s*(?:KG|LT|UNI)?\s+(\d+)\s+([\d.,]+)\s+([\d.,]+)',
-                        # "DULCE DE LECHE X 3 24.545,06"
-                        r'([A-ZÁÉÍÓÚÑ\s]+?)\s+X\s*(\d+)\s+([\d.,]+)',
-                        # Líneas con cantidad y precio
-                        r'^([A-ZÁÉÍÓÚÑa-z\s]+?)\s+(\d+)\s+([\d.,]+)$',
-                    ]
-                    
-                    for pattern in patterns:
-                        matches = re.findall(pattern, text, re.MULTILINE)
-                        logger.info(f"Pattern matches: {len(matches)}")
-                        
-                        for match in matches:
-                            try:
-                                if len(match) >= 3:
-                                    name = match[0].strip()
-                                    qty = float(re.sub(r'[^\d.]', '', match[1]))
-                                    price = float(re.sub(r'[^\d.]', '', match[2].replace(',', '.')))
-                                    
-                                    if name and qty > 0 and price > 0:
-                                        line_total = float(re.sub(r'[^\d.]', '', match[3].replace(',', '.'))) if len(match) > 3 else qty * price
-                                        
-                                        lines_data.append({
-                                            "raw_name": name,
-                                            "quantity": qty,
-                                            "unit_price": price,
-                                            "total": line_total,
-                                            "unit": "7.8kg"
-                                        })
-                                        total += line_total
-                            except (ValueError, TypeError, IndexError):
-                                continue
-                        
-                        if lines_data:
-                            break
-            
-            # Extraer número de factura con múltiples patrones
-            number_patterns = [
-                r'N[°º]?\s*(\d{4}[-\s]?\d{8})',
-                r'Factura\s*N[°º]?\s*(\d{4}[-\s]?\d{8})',
-                r'(\d{4}[-\s]\d{8})',
-                r'Comprobante[:\s]+(\d+)',
-                r'N[°º][:.\s]+(\d+)',
-            ]
-            
-            for pattern in number_patterns:
-                match = re.search(pattern, raw_text, re.IGNORECASE)
-                if match:
-                    invoice_number = match.group(1).replace(' ', '-')
-                    logger.info(f"Invoice number found: {invoice_number}")
-                    break
-            
-            # Extraer fecha
-            date_patterns = [
-                r'(\d{2}[./]\d{2}[./]\d{4})',
-                r'(\d{4}[./]\d{2}[./]\d{2})',
-            ]
-            
-            for pattern in date_patterns:
-                match = re.search(pattern, raw_text)
-                if match:
-                    date_str = match.group(1)
-                    for fmt in ["%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d", "%Y/%m/%d"]:
-                        try:
-                            invoice_date = datetime.strptime(date_str, fmt)
-                            logger.info(f"Invoice date found: {invoice_date}")
-                            break
-                        except ValueError:
-                            continue
-                    if invoice_date:
+        
+        # Extraer número de factura
+        number_patterns = [
+            r'N[°º]?\s*(\d{4}[-\s]?\d{8})',
+            r'Factura\s*N[°º]?\s*(\d{4}[-\s]?\d{8})',
+            r'(\d{4}[-\s]\d{8})',
+        ]
+        
+        for pattern in number_patterns:
+            match = re.search(pattern, raw_text, re.IGNORECASE)
+            if match:
+                invoice_number = match.group(1).replace(' ', '-')
+                break
+        
+        # Extraer fecha
+        date_patterns = [r'(\d{2}[./]\d{2}[./]\d{4})', r'(\d{4}[./]\d{2}[./]\d{2})']
+        
+        for pattern in date_patterns:
+            match = re.search(pattern, raw_text)
+            if match:
+                date_str = match.group(1)
+                for fmt in ["%d.%m.%Y", "%d/%m/%Y", "%Y-%m-%d", "%Y/%m/%d"]:
+                    try:
+                        invoice_date = datetime.strptime(date_str, fmt)
                         break
-            
-            # Extraer total
-            total_patterns = [
-                r'Total[:\s]+\$?\s*([\d.,]+)',
-                r'TOTAL[:\s]+\$?\s*([\d.,]+)',
-                r'Importe\s+Total[:\s]+\$?\s*([\d.,]+)',
-            ]
-            
+                    except ValueError:
+                        continue
+                if invoice_date:
+                    break
+        
+        # Extraer total si no se encontró
+        if total == 0:
+            total_patterns = [r'Total[:\s]+\$?\s*([\d.,]+)', r'TOTAL[:\s]+\$?\s*([\d.,]+)']
             for pattern in total_patterns:
                 match = re.search(pattern, raw_text)
                 if match:
                     try:
                         total = float(re.sub(r'[^\d.]', '', match.group(1).replace(',', '.')))
-                        logger.info(f"Total found: {total}")
                         break
                     except ValueError:
                         continue
@@ -315,28 +358,30 @@ async def debug_invoice(
     debug_info = {
         "filename": file.filename,
         "size_bytes": len(file_bytes),
+        "gemini_available": bool(os.getenv("GOOGLE_API_KEY", "")),
         "pages": []
     }
     
     try:
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+            full_text = ""
             for i, page in enumerate(pdf.pages):
                 text = page.extract_text() or ""
+                full_text += text + "\n"
                 
                 tables_bordered = page.extract_tables()
-                tables_borderless = page.extract_tables({
-                    "vertical_strategy": "text",
-                    "horizontal_strategy": "text"
-                })
                 
                 debug_info["pages"].append({
                     "page_number": i + 1,
                     "text_length": len(text),
                     "text_preview": text[:500] if text else None,
-                    "tables_with_borders": len(tables_bordered),
-                    "tables_borderless": len(tables_borderless),
-                    "tables_preview": str(tables_bordered[:2])[:1000] if tables_bordered else None
+                    "tables_count": len(tables_bordered)
                 })
+            
+            # Test Gemini extraction
+            if os.getenv("GOOGLE_API_KEY"):
+                gemini_result = parse_with_gemini(full_text)
+                debug_info["gemini_result"] = gemini_result
     except Exception as e:
         debug_info["error"] = str(e)
     

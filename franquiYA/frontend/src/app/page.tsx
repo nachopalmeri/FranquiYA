@@ -5,6 +5,7 @@ import { Sidebar } from '@/components/layout/sidebar'
 import { Header } from '@/components/layout/header'
 import { KPICards } from '@/components/stock/kpi-cards'
 import { StockAlerts } from '@/components/stock/alert-badge'
+import { ChatWidget } from '@/components/chat/chat-widget'
 import type { DashboardStats, StockAlert } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 import { Card, CardContent } from '@/components/ui/card'
@@ -191,6 +192,7 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+        <ChatWidget />
       </main>
     </div>
   )

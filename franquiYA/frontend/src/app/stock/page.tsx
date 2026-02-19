@@ -6,6 +6,7 @@ import { Header } from '@/components/layout/header'
 import { StockTable } from '@/components/stock/stock-table'
 import { StockFilters } from '@/components/stock/stock-filters'
 import { StockCharts } from '@/components/stock/stock-charts'
+import { ChatWidget } from '@/components/chat/chat-widget'
 import type { Product, ProductCategory } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 import { Button } from '@/components/ui/button'
@@ -173,6 +174,7 @@ export default function StockPage() {
             </div>
           </div>
         </div>
+        <ChatWidget />
       </main>
     </div>
   )

@@ -6,6 +6,7 @@ import { AuditProgressBar } from '@/components/audit/progress-bar'
 import { ProductCard } from '@/components/audit/product-card'
 import { CategorySelector } from '@/components/audit/category-selector'
 import { AuditSummary } from '@/components/audit/summary'
+import { ChatWidget } from '@/components/chat/chat-widget'
 import type { Product, ProductCategory } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 import { Button } from '@/components/ui/button'
@@ -243,6 +244,7 @@ export default function AuditPage() {
             </Card>
           )}
         </div>
+        <ChatWidget />
       </main>
     </div>
   )
