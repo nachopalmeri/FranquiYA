@@ -9,7 +9,7 @@ import { StepperInput } from './stepper-input'
 
 interface ProductCardProps {
   product: Product
-  onConfirm: (productId: number, closedQty: number, openQty: number) => void
+  onConfirm: (productId: number) => void
   disabled?: boolean
 }
 
@@ -20,7 +20,7 @@ export function ProductCard({ product, onConfirm, disabled }: ProductCardProps) 
 
   const handleConfirm = () => {
     if (closedQty > 0 || openQty > 0) {
-      onConfirm(product.id, closedQty, openQty)
+      onConfirm(product.id)
       setConfirmed(true)
     }
   }

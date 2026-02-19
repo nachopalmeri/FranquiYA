@@ -45,8 +45,12 @@ export default function AuditPage() {
     }
   }, [authLoading, user])
 
-  const handleConfirmProduct = (productId: number, _closedQty?: number, _openQty?: number) => {
-    setConfirmedProducts(prev => new Set([...prev, productId]))
+  const handleConfirmProduct = (productId: number) => {
+    setConfirmedProducts(prev => {
+      const newSet = new Set(prev)
+      newSet.add(productId)
+      return newSet
+    })
   }
 
   const handleSubmitAudit = async () => {
