@@ -13,6 +13,8 @@ class User(Base):
     role = Column(String, default="operator")
     franchise_id = Column(Integer, ForeignKey("franchises.id"))
     is_active = Column(Boolean, default=True)
+    requires_setup = Column(Boolean, default=False)
+    completed_tour = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     franchise = relationship("Franchise", back_populates="users")

@@ -114,10 +114,13 @@ PRODUCTS_DATA = [
 ]
 
 def seed_database(db):
-    franchise = db.query(Franchise).filter(Franchise.code == "101535").first()
+    # ============================================
+    # FRANQUICIA 1: Fernando Palmeri - LISTA
+    # ============================================
+    franchise_fernando = db.query(Franchise).filter(Franchise.code == "101535").first()
     
-    if not franchise:
-        franchise = Franchise(
+    if not franchise_fernando:
+        franchise_fernando = Franchise(
             code="101535",
             name="Grido Lanús",
             owner="Fernando Palmeri",
@@ -128,9 +131,68 @@ def seed_database(db):
             weather_city="Lanus,AR",
             supplier="Helacor S.A."
         )
-        db.add(franchise)
+        db.add(franchise_fernando)
         db.flush()
+        print("Franchise Fernando created")
     
+    # Usuario Fernando - Todo configurado
+    fernando_user = db.query(User).filter(User.email == "fernando@gmail.com").first()
+    if fernando_user:
+        fernando_user.hashed_password = get_password_hash("lulita")
+        print("Fernando password updated")
+    else:
+        fernando_user = User(
+            email="fernando@gmail.com",
+            name="Fernando Palmeri",
+            hashed_password=get_password_hash("lulita"),
+            role="admin",
+            franchise_id=franchise_fernando.id,
+            is_active=True,
+            requires_setup=False,
+            completed_tour=True
+        )
+        db.add(fernando_user)
+        print("Fernando user created")
+    
+    # Productos para Fernando
+    existing_products = db.query(Product).filter(Product.franchise_id == franchise_fernando.id).count()
+    if existing_products == 0:
+        for name, category, unit, stock, min_stock, price in PRODUCTS_DATA:
+            product = Product(
+                name=name,
+                category=category,
+                unit=unit,
+                current_stock=stock,
+                min_stock=min_stock,
+                unit_price=price,
+                franchise_id=franchise_fernando.id,
+                is_active=True
+            )
+            db.add(product)
+        print(f"Seeded {len(PRODUCTS_DATA)} products for Fernando")
+    
+    # ============================================
+    # FRANQUICIA 2: Admin Nueva - VACÍA
+    # ============================================
+    franchise_admin = db.query(Franchise).filter(Franchise.code == "").first()
+    
+    if not franchise_admin:
+        franchise_admin = Franchise(
+            code="",
+            name="",
+            owner="",
+            cuit="",
+            address="",
+            city="",
+            province="",
+            weather_city="",
+            supplier=""
+        )
+        db.add(franchise_admin)
+        db.flush()
+        print("Franchise Admin (empty) created")
+    
+    # Usuario Admin - Requiere setup
     admin_user = db.query(User).filter(User.email == "admin@grido.com").first()
     if admin_user:
         admin_user.hashed_password = get_password_hash("admin123")
@@ -138,15 +200,20 @@ def seed_database(db):
     else:
         admin_user = User(
             email="admin@grido.com",
-            name="Fernando Palmeri",
+            name="",
             hashed_password=get_password_hash("admin123"),
             role="admin",
-            franchise_id=franchise.id,
-            is_active=True
+            franchise_id=franchise_admin.id,
+            is_active=True,
+            requires_setup=True,
+            completed_tour=False
         )
         db.add(admin_user)
-        print("Admin user created")
+        print("Admin user created (requires setup)")
     
+    # ============================================
+    # OPERADOR: Usuario limitado (trabaja para Fernando)
+    # ============================================
     operator_user = db.query(User).filter(User.email == "operator@grido.com").first()
     if operator_user:
         operator_user.hashed_password = get_password_hash("operator123")
@@ -157,27 +224,13 @@ def seed_database(db):
             name="Operador",
             hashed_password=get_password_hash("operator123"),
             role="operator",
-            franchise_id=franchise.id,
-            is_active=True
+            franchise_id=franchise_fernando.id,
+            is_active=True,
+            requires_setup=False,
+            completed_tour=True
         )
         db.add(operator_user)
         print("Operator user created")
-    
-    existing_products = db.query(Product).filter(Product.franchise_id == franchise.id).count()
-    if existing_products == 0:
-        for name, category, unit, stock, min_stock, price in PRODUCTS_DATA:
-            product = Product(
-                name=name,
-                category=category,
-                unit=unit,
-                current_stock=stock,
-                min_stock=min_stock,
-                unit_price=price,
-                franchise_id=franchise.id,
-                is_active=True
-            )
-            db.add(product)
-        print(f"Seeded {len(PRODUCTS_DATA)} products")
     
     db.commit()
     print("Database seed completed!")

@@ -5,6 +5,8 @@ export interface User {
   role: 'admin' | 'operator';
   franchise_id: number;
   is_active: boolean;
+  requires_setup?: boolean;
+  completed_tour?: boolean;
 }
 
 export interface Franchise {

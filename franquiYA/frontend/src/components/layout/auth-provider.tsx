@@ -10,6 +10,7 @@ interface AuthContextType {
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => void
+  refreshUser: () => Promise<User | null>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -19,6 +20,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true)
   const router = useRouter()
   const pathname = usePathname()
+
+  const refreshUser = async () => {
+    try {
+      const userData = await api.auth.me()
+      setUser(userData)
+      return userData
+    } catch {
+      localStorage.removeItem('token')
+      setUser(null)
+      return null
+    }
+  }
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -47,11 +60,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     checkAuth()
   }, [pathname, router])
 
+  useEffect(() => {
+    if (!loading && user) {
+      const isSetupPage = pathname.startsWith('/setup')
+      const isWelcomePage = pathname === '/welcome'
+      const isTourPage = pathname === '/tour'
+      const isLoginPage = pathname === '/login'
+
+      if (user.requires_setup && !isSetupPage && !isLoginPage) {
+        router.push('/setup')
+      } else if (!user.requires_setup && !user.completed_tour && !isWelcomePage && !isTourPage && !isLoginPage) {
+        router.push('/welcome')
+      }
+    }
+  }, [user, loading, pathname, router])
+
   const login = async (email: string, password: string) => {
     const response = await api.auth.login({ email, password })
     localStorage.setItem('token', response.access_token)
     setUser(response.user)
-    router.push('/')
+    
+    if (response.user.requires_setup) {
+      router.push('/setup')
+    } else if (!response.user.completed_tour) {
+      router.push('/welcome')
+    } else {
+      router.push('/')
+    }
   }
 
   const logout = () => {
@@ -61,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )
