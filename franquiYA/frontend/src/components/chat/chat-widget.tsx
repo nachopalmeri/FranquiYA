@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/components/layout/auth-provider'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -18,10 +19,9 @@ interface QuickAction {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 export function ChatWidget() {
+  const { user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
-  const [messages, setMessages] = useState<Message[]>([
-    { role: 'assistant', content: '¡Hola! Soy el asistente de Grido Lanús. ¿En qué puedo ayudarte?' }
-  ])
+  const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [quickActions, setQuickActions] = useState<QuickAction[]>([])
@@ -30,6 +30,14 @@ export function ChatWidget() {
   useEffect(() => {
     fetchQuickActions()
   }, [])
+
+  useEffect(() => {
+    if (isOpen && messages.length === 0 && user?.franchise_name) {
+      setMessages([
+        { role: 'assistant', content: `¡Hola! Soy el asistente de ${user.franchise_name}. ¿En qué puedo ayudarte?` }
+      ])
+    }
+  }, [isOpen, user?.franchise_name, messages.length])
 
   useEffect(() => {
     scrollToBottom()

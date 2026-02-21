@@ -13,6 +13,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { useAuth } from './auth-provider'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
@@ -23,6 +24,7 @@ const navItems = [
 
 export function Sidebar() {
   const pathname = usePathname()
+  const { user } = useAuth()
 
   const handleLogout = () => {
     localStorage.removeItem('token')
@@ -38,7 +40,7 @@ export function Sidebar() {
           </div>
           <div>
             <h1 className="text-lg font-bold text-white">Grido Smart</h1>
-            <p className="text-xs text-gray-400">Franquicia Lanús</p>
+            <p className="text-xs text-gray-400">{user?.franchise_name || 'Mi Franquicia'}</p>
           </div>
         </div>
 

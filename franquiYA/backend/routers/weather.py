@@ -73,7 +73,7 @@ def get_weather(
             )
         
         data = response.json()
-        city_name = data.get("name", "Lanús")
+        city_name = data.get("name", "")
         logger.info(f"Weather data received: {city_name} - {data.get('weather', [{}])[0].get('description', 'N/A')}")
         
         forecast_url = "http://api.openweathermap.org/data/2.5/forecast"
@@ -138,7 +138,6 @@ def debug_weather_config():
         "api_key_prefix": api_key[:8] + "..." if api_key and len(api_key) > 8 else "N/A",
         "coordinates": {
             "lat": lat,
-            "lon": lon,
-            "location": "Lanús, Buenos Aires, Argentina"
+            "lon": lon
         }
     }

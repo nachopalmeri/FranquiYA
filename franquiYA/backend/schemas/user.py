@@ -15,6 +15,7 @@ class User(UserBase):
     id: int
     role: str
     franchise_id: int
+    franchise_name: Optional[str] = None
     is_active: bool
     requires_setup: bool = False
     completed_tour: bool = False

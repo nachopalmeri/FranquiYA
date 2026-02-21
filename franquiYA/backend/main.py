@@ -48,7 +48,7 @@ app.include_router(chat_router, prefix="/api")
 def read_root():
     return {
         "status": "Sistema Operativo",
-        "franchise": "Grido Lanús",
+        "franchise": "Grido Smart Ops",
         "version": "1.0.0"
     }
 

@@ -7,6 +7,7 @@ from database import get_db
 from models.user import User
 from models.product import Product
 from models.invoice import Invoice
+from models.franchise import Franchise
 from auth import get_current_active_user
 
 router = APIRouter(prefix="/chat", tags=["chat"])
@@ -72,11 +73,13 @@ def chat(
     try:
         import google.generativeai as genai
         
-        # Obtener contexto del negocio
+        franchise = db.query(Franchise).filter(Franchise.id == current_user.franchise_id).first()
+        franchise_name = franchise.name if franchise else "Grido"
+        franchise_city = franchise.city if franchise else "Buenos Aires"
+        
         stock_summary = get_stock_summary(db, current_user.franchise_id)
         products_list = get_products_list(db, current_user.franchise_id)
         
-        # Últimas facturas
         recent_invoices = db.query(Invoice).filter(
             Invoice.franchise_id == current_user.franchise_id
         ).order_by(Invoice.created_at.desc()).limit(3).all()
@@ -85,9 +88,9 @@ def chat(
         for inv in recent_invoices:
             invoices_info += f"- Factura #{inv.number}: ${inv.total:.2f} ({inv.status})\n"
         
-        # Crear prompt con contexto
-        system_prompt = f"""Sos un asistente virtual de una franquicia Grido Helados en Lanús, Buenos Aires.
+        system_prompt = f"""Sos un asistente virtual de una franquicia Grido Helados en {franchise_city}, Buenos Aires.
 Tu dueño es {current_user.name}.
+La franquicia se llama "{franchise_name}".
 
 INFORMACIÓN DEL NEGOCIO:
 {stock_summary}
@@ -111,7 +114,7 @@ INSTRUCCIONES:
         
         response = model.generate_content([
             {"role": "user", "parts": [system_prompt]},
-            {"role": "model", "parts": ["Entendido, soy el asistente de Grido Lanús. ¿En qué puedo ayudarte?"]},
+            {"role": "model", "parts": [f"Entendido, soy el asistente de {franchise_name}. ¿En qué puedo ayudarte?"]},
             {"role": "user", "parts": [request.message]}
         ])
         

@@ -4,6 +4,7 @@ export interface User {
   name: string;
   role: 'admin' | 'operator';
   franchise_id: number;
+  franchise_name?: string;
   is_active: boolean;
   requires_setup?: boolean;
   completed_tour?: boolean;

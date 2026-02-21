@@ -35,15 +35,22 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
     
     access_token = create_access_token(data={"sub": user.email})
     
+    franchise = db.query(Franchise).filter(Franchise.id == user.franchise_id).first()
+    user_dict = UserSchema.model_validate(user).model_dump()
+    user_dict['franchise_name'] = franchise.name if franchise else None
+    
     return Token(
         access_token=access_token,
         token_type="bearer",
-        user=UserSchema.model_validate(user)
+        user=UserSchema(**user_dict)
     )
 
 @router.get("/me", response_model=UserSchema)
-def get_me(current_user: User = Depends(get_current_active_user)):
-    return UserSchema.model_validate(current_user)
+def get_me(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
+    franchise = db.query(Franchise).filter(Franchise.id == current_user.franchise_id).first()
+    user_dict = UserSchema.model_validate(current_user).model_dump()
+    user_dict['franchise_name'] = franchise.name if franchise else None
+    return user_dict
 
 @router.post("/register", response_model=UserSchema)
 def register(
