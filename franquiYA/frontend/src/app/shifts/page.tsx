@@ -5,7 +5,6 @@ import { api } from '@/lib/api'
 import type { Employee, Role, ShiftCalendar } from '@/lib/types'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
 import { Plus, Clock } from 'lucide-react'
 import {
   Dialog,

@@ -3,10 +3,10 @@
 import { useEffect, useState } from 'react'
 import { api } from '@/lib/api'
 import type { Task, TaskStats, Employee } from '@/lib/types'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Plus, CheckCircle, Circle, Clock, AlertTriangle, Check } from 'lucide-react'
+import { Plus, CheckCircle, Circle, Clock } from 'lucide-react'
 import {
   Dialog,
   DialogContent,

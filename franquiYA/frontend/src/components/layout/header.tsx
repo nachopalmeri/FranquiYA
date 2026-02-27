@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Thermometer, Droplets, Wind, Sun, CloudRain } from 'lucide-react'
+import { Thermometer, Droplets, Wind } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { WeatherData, WeatherInsight } from '@/lib/types'
