@@ -79,7 +79,7 @@ export default function HolidaysPage() {
     }
   }
 
-  const handleStatusChange = async (id: number, status: 'planned' | 'approved' | 'taken') => {
+  const handleStatusChange = async (id: number, status: 'planned' | 'approved' | 'taken' | 'cancelled') => {
     try {
       await api.holidays.update(id, { status })
       loadData()
