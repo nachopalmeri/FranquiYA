@@ -11,6 +11,7 @@ class User(Base):
     name = Column(String)
     hashed_password = Column(String)
     role = Column(String, default="operator")
+    user_type = Column(String, default="empleado")  # franquiciado | empleado
     franchise_id = Column(Integer, ForeignKey("franchises.id"))
     is_active = Column(Boolean, default=True)
     requires_setup = Column(Boolean, default=False)

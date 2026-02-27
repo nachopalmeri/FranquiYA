@@ -10,7 +10,13 @@ from routers import (
     audit_router,
     dashboard_router,
     franchise_router,
-    chat_router
+    chat_router,
+    roles_router,
+    employees_router,
+    shifts_router,
+    holidays_router,
+    tasks_router,
+    external_events_router
 )
 
 Base.metadata.create_all(bind=engine)
@@ -43,6 +49,12 @@ app.include_router(audit_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
 app.include_router(franchise_router, prefix="/api")
 app.include_router(chat_router, prefix="/api")
+app.include_router(roles_router, prefix="/api")
+app.include_router(employees_router, prefix="/api")
+app.include_router(shifts_router, prefix="/api")
+app.include_router(holidays_router, prefix="/api")
+app.include_router(tasks_router, prefix="/api")
+app.include_router(external_events_router, prefix="/api")
 
 @app.get("/")
 def read_root():

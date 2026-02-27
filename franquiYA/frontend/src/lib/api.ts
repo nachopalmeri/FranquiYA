@@ -8,7 +8,16 @@ import type {
   DashboardStats,
   LoginCredentials,
   AuthResponse,
-  StockAlert
+  StockAlert,
+  Role,
+  Employee,
+  Shift,
+  ShiftCalendar,
+  Holiday,
+  VacationSummary,
+  Task,
+  TaskStats,
+  ExternalEvent
 } from './types';
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
@@ -145,6 +154,102 @@ export const api = {
 
   dashboard: {
     stats: () => fetchApi<DashboardStats>('/dashboard/stats'),
+  },
+
+  roles: {
+    list: () => fetchApi<Role[]>('/roles'),
+    create: (data: { name: string; color: string; permissions?: string }) =>
+      fetchApi<Role>('/roles', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: { name: string; color: string; permissions?: string }) =>
+      fetchApi<Role>(`/roles/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => fetchApi<void>(`/roles/${id}`, { method: 'DELETE' }),
+  },
+
+  employees: {
+    list: () => fetchApi<Employee[]>('/employees'),
+    get: (id: number) => fetchApi<Employee>(`/employees/${id}`),
+    create: (data: {
+      name: string;
+      role_id: number;
+      phone?: string;
+      dni?: string;
+      emergency_contact?: string;
+      vacation_days_total?: number;
+      hourly_rate?: number;
+      user_id?: number;
+    }) => fetchApi<Employee>('/employees', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: Partial<Employee>) =>
+      fetchApi<Employee>(`/employees/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => fetchApi<void>(`/employees/${id}`, { method: 'DELETE' }),
+    vacationSummary: (id: number) => fetchApi<VacationSummary>(`/employees/${id}/vacation-summary`),
+  },
+
+  shifts: {
+    list: () => fetchApi<Shift[]>('/shifts'),
+    calendar: () => fetchApi<ShiftCalendar>('/shifts/calendar'),
+    create: (data: {
+      employee_id: number;
+      role_id: number;
+      day_of_week: number;
+      start_time: string;
+      end_time: string;
+      is_recurring?: boolean;
+    }) => fetchApi<Shift>('/shifts', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: Partial<Shift>) =>
+      fetchApi<Shift>(`/shifts/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => fetchApi<void>(`/shifts/${id}`, { method: 'DELETE' }),
+  },
+
+  holidays: {
+    list: () => fetchApi<Holiday[]>('/holidays'),
+    calendar: () => fetchApi<{ calendar: Record<string, Holiday[]> }>('/holidays/calendar'),
+    create: (data: {
+      employee_id: number;
+      start_date: string;
+      end_date: string;
+      days_count: number;
+      notes?: string;
+      status?: string;
+    }) => fetchApi<Holiday>('/holidays', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: { status?: string }) =>
+      fetchApi<Holiday>(`/holidays/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => fetchApi<void>(`/holidays/${id}`, { method: 'DELETE' }),
+  },
+
+  tasks: {
+    list: (params?: { status?: string; priority?: string; assigned_to?: number }) => {
+      const query = new URLSearchParams(params as Record<string, string>).toString();
+      return fetchApi<Task[]>(`/tasks${query ? `?${query}` : ''}`);
+    },
+    create: (data: {
+      title: string;
+      description?: string;
+      priority?: string;
+      due_date?: string;
+      assigned_to?: number;
+    }) => fetchApi<Task>('/tasks', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: Partial<Task>) =>
+      fetchApi<Task>(`/tasks/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => fetchApi<void>(`/tasks/${id}`, { method: 'DELETE' }),
+    stats: () => fetchApi<TaskStats>('/tasks/stats'),
+  },
+
+  externalEvents: {
+    list: (month?: string) => 
+      fetchApi<ExternalEvent[]>(month ? `/external-events?month=${month}` : '/external-events'),
+    create: (data: {
+      title: string;
+      description?: string;
+      visitor_name: string;
+      visitor_contact?: string;
+      date: string;
+      time_start?: string;
+      time_end?: string;
+      is_recurring?: boolean;
+    }) => fetchApi<ExternalEvent>('/external-events', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id: number, data: Partial<ExternalEvent>) =>
+      fetchApi<ExternalEvent>(`/external-events/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id: number) => fetchApi<void>(`/external-events/${id}`, { method: 'DELETE' }),
   },
 };
 

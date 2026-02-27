@@ -9,11 +9,13 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
     role: str = "operator"
+    user_type: str = "empleado"  # franquiciado | empleado
     franchise_id: int
 
 class User(UserBase):
     id: int
     role: str
+    user_type: str = "empleado"
     franchise_id: int
     franchise_name: Optional[str] = None
     is_active: bool

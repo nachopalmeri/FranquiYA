@@ -3,6 +3,7 @@ export interface User {
   email: string;
   name: string;
   role: 'admin' | 'operator';
+  user_type: 'franquiciado' | 'empleado';
   franchise_id: number;
   franchise_name?: string;
   is_active: boolean;
@@ -179,3 +180,130 @@ export const CATEGORY_ORDER: ProductCategory[] = [
   'insumos',
   'alfajores',
 ];
+
+// === NEW TYPES FOR TURNS/HOLIDAYS/CALENDAR ===
+
+export interface Role {
+  id: number;
+  franchise_id: number;
+  name: string;
+  color: string;
+  permissions: string;
+  is_active: boolean;
+}
+
+export interface Employee {
+  id: number;
+  franchise_id: number;
+  user_id?: number;
+  role_id: number;
+  name: string;
+  phone?: string;
+  dni?: string;
+  emergency_contact?: string;
+  vacation_days_total: number;
+  hourly_rate?: number;
+  is_active: boolean;
+  hire_date: string;
+  created_at: string;
+  role?: Role;
+  vacation_taken?: number;
+  vacation_remaining?: number;
+}
+
+export interface Shift {
+  id: number;
+  franchise_id: number;
+  employee_id: number;
+  role_id: number;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  is_active: boolean;
+  is_recurring: boolean;
+  created_at: string;
+  employee?: Employee;
+  role?: Role;
+}
+
+export interface ShiftCalendar {
+  days: string[];
+  schedule: Record<number, {
+    id: number;
+    employee_id: number;
+    employee_name: string;
+    role_id: number;
+    start_time: string;
+    end_time: string;
+    day_name: string;
+  }[]>;
+}
+
+export interface Holiday {
+  id: number;
+  franchise_id: number;
+  employee_id: number;
+  start_date: string;
+  end_date: string;
+  days_count: number;
+  status: 'planned' | 'approved' | 'taken';
+  notes?: string;
+  created_at: string;
+  approved_by?: number;
+  approved_at?: string;
+  employee?: Employee;
+}
+
+export interface VacationSummary {
+  employee_id: number;
+  employee_name: string;
+  total_days: number;
+  days_taken: number;
+  days_remaining: number;
+  planned_holidays: {
+    id: number;
+    start_date: string;
+    end_date: string;
+    days_count: number;
+    status: string;
+  }[];
+}
+
+export interface Task {
+  id: number;
+  franchise_id: number;
+  created_by: number;
+  assigned_to?: number;
+  title: string;
+  description?: string;
+  priority: 'low' | 'medium' | 'high' | 'urgent';
+  status: 'pending' | 'in_progress' | 'completed';
+  due_date?: string;
+  created_at: string;
+  completed_at?: string;
+  creator?: { id: number; name: string };
+  assignee?: { id: number; name: string };
+}
+
+export interface TaskStats {
+  total: number;
+  pending: number;
+  in_progress: number;
+  completed: number;
+  urgent: number;
+}
+
+export interface ExternalEvent {
+  id: number;
+  franchise_id: number;
+  title: string;
+  description?: string;
+  visitor_name: string;
+  visitor_contact?: string;
+  date: string;
+  time_start?: string;
+  time_end?: string;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  is_recurring: boolean;
+  created_at: string;
+}

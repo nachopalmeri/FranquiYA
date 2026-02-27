@@ -8,7 +8,12 @@ import {
   ClipboardCheck, 
   Package, 
   LogOut,
-  IceCreamBowl
+  IceCreamBowl,
+  Users,
+  CalendarDays,
+  CalendarRange,
+  CheckSquare,
+  UserCheck
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -17,6 +22,11 @@ import { useAuth } from './auth-provider'
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { href: '/employees', label: 'Empleados', icon: Users },
+  { href: '/shifts', label: 'Turnos', icon: CalendarDays },
+  { href: '/holidays', label: 'Vacaciones', icon: CalendarRange },
+  { href: '/calendar', label: 'Eventos', icon: UserCheck },
+  { href: '/tasks', label: 'Tareas', icon: CheckSquare },
   { href: '/invoices', label: 'Facturas', icon: FileText },
   { href: '/audit', label: 'Auditoría', icon: ClipboardCheck },
   { href: '/stock', label: 'Stock', icon: Package },
@@ -44,7 +54,7 @@ export function Sidebar() {
           </div>
         </div>
 
-        <nav className="flex-1 space-y-1 p-4">
+        <nav className="flex-1 space-y-1 p-4 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href
             return (

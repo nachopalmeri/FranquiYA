@@ -1,6 +1,8 @@
 from models.user import User
 from models.franchise import Franchise
 from models.product import Product
+from models.role import Role
+from models.employee import Employee
 from auth import get_password_hash
 
 PRODUCTS_DATA = [
@@ -139,6 +141,7 @@ def seed_database(db):
     fernando_user = db.query(User).filter(User.email == "fernando@gmail.com").first()
     if fernando_user:
         fernando_user.hashed_password = get_password_hash("lulita")
+        fernando_user.user_type = "franquiciado"
         print("Fernando password updated")
     else:
         fernando_user = User(
@@ -146,6 +149,7 @@ def seed_database(db):
             name="Fernando Palmeri",
             hashed_password=get_password_hash("lulita"),
             role="admin",
+            user_type="franquiciado",
             franchise_id=franchise_fernando.id,
             is_active=True,
             requires_setup=False,
@@ -153,6 +157,41 @@ def seed_database(db):
         )
         db.add(fernando_user)
         print("Fernando user created")
+    
+    db.flush()
+    
+    # Crear rol "Vendedor" para Fernando
+    role_vendedor = db.query(Role).filter(
+        Role.franchise_id == franchise_fernando.id,
+        Role.name == "Vendedor"
+    ).first()
+    
+    if not role_vendedor:
+        role_vendedor = Role(
+            name="Vendedor",
+            color="#22C55E",  # Green
+            franchise_id=franchise_fernando.id
+        )
+        db.add(role_vendedor)
+        db.flush()
+        print("Vendedor role created")
+    
+    # Crear empleado para Fernando (él mismo)
+    employee_fernando = db.query(Employee).filter(
+        Employee.franchise_id == franchise_fernando.id,
+        Employee.name == "Fernando Palmeri"
+    ).first()
+    
+    if not employee_fernando:
+        employee_fernando = Employee(
+            name="Fernando Palmeri",
+            role_id=role_vendedor.id,
+            phone="",
+            franchise_id=franchise_fernando.id,
+            user_id=fernando_user.id
+        )
+        db.add(employee_fernando)
+        print("Fernando employee created")
     
     # Productos para Fernando
     existing_products = db.query(Product).filter(Product.franchise_id == franchise_fernando.id).count()
@@ -196,6 +235,7 @@ def seed_database(db):
     admin_user = db.query(User).filter(User.email == "admin@grido.com").first()
     if admin_user:
         admin_user.hashed_password = get_password_hash("admin123")
+        admin_user.user_type = "franquiciado"
         print("Admin password updated")
     else:
         admin_user = User(
@@ -203,6 +243,7 @@ def seed_database(db):
             name="",
             hashed_password=get_password_hash("admin123"),
             role="admin",
+            user_type="franquiciado",
             franchise_id=franchise_admin.id,
             is_active=True,
             requires_setup=True,
@@ -217,6 +258,7 @@ def seed_database(db):
     operator_user = db.query(User).filter(User.email == "operator@grido.com").first()
     if operator_user:
         operator_user.hashed_password = get_password_hash("operator123")
+        operator_user.user_type = "empleado"
         print("Operator password updated")
     else:
         operator_user = User(
@@ -224,6 +266,7 @@ def seed_database(db):
             name="Operador",
             hashed_password=get_password_hash("operator123"),
             role="operator",
+            user_type="empleado",
             franchise_id=franchise_fernando.id,
             is_active=True,
             requires_setup=False,
