@@ -96,13 +96,13 @@ export default function ShiftsPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Cargando...</div>
+    return <div className="p-6 text-[#4A3728]">Cargando...</div>
   }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white">Turnos Semanales</h1>
+        <h1 className="text-2xl font-bold text-[#4A3728] font-heading">Turnos Semanales</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
             <Button className="bg-[#E31D2B] hover:bg-[#C41925]">
