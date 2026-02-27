@@ -3,8 +3,19 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from database import engine, Base, get_db
 
-# Import all models to register them with SQLAlchemy
-from models import user, product, invoice, franchise, role, employee, shift, holiday, task, external_event, audit
+# Import all models in order to register them with SQLAlchemy
+from models.user import User
+from models.franchise import Franchise
+from models.product import Product
+from models.invoice import Invoice, InvoiceLine
+from models.role import Role
+from models.employee import Employee
+from models.shift import Shift
+from models.holiday import Holiday
+from models.task import Task
+from models.external_event import ExternalEvent
+from models.attendance import Attendance
+from models.audit import StockAudit
 
 from routers import (
     auth_router,
