@@ -31,6 +31,7 @@ export default function CalendarPage() {
     description: '',
   })
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadData()
   }, [])
@@ -75,7 +76,7 @@ export default function CalendarPage() {
     }
   }
 
-  const handleStatusChange = async (id: number, status: string) => {
+  const handleStatusChange = async (id: number, status: 'scheduled' | 'completed' | 'cancelled') => {
     try {
       await api.externalEvents.update(id, { status })
       loadData()
