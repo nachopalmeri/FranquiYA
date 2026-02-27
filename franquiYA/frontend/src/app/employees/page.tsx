@@ -75,44 +75,44 @@ export default function EmployeesPage() {
   }
 
   if (loading) {
-    return <div className="p-6">Cargando...</div>
+    return <div className="p-6 text-[#4A3728]">Cargando...</div>
   }
 
   return (
     <div className="p-6 space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-white">Empleados</h1>
+        <h1 className="text-2xl font-bold text-[#4A3728] font-heading">Empleados</h1>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#E31D2B] hover:bg-[#C41925]">
+            <Button className="bg-[#E31D2B] hover:bg-[#C41925] text-white">
               <Plus className="h-4 w-4 mr-2" />
               Nuevo Empleado
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#1a1a1a] border-white/10">
+          <DialogContent className="bg-white border-[#E8DFD3]">
             <DialogHeader>
-              <DialogTitle className="text-white">Nuevo Empleado</DialogTitle>
+              <DialogTitle className="text-[#4A3728]">Nuevo Empleado</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <Label className="text-gray-300">Nombre</Label>
+                <Label className="text-[#4A3728]">Nombre</Label>
                 <Input
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="border-[#E8DFD3] bg-[#FFF8F0] text-[#4A3728]"
                   required
                 />
               </div>
               <div>
-                <Label className="text-gray-300">Rol</Label>
+                <Label className="text-[#4A3728]">Rol</Label>
                 <Select
                   value={formData.role_id}
                   onValueChange={(value) => setFormData({ ...formData, role_id: value })}
                 >
-                  <SelectTrigger className="bg-white/5 border-white/10 text-white">
+                  <SelectTrigger className="border-[#E8DFD3] bg-[#FFF8F0] text-[#4A3728]">
                     <SelectValue placeholder="Seleccionar rol" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#1a1a1a] border-white/10">
+                  <SelectContent className="bg-white border-[#E8DFD3]">
                     {roles.map((role) => (
                       <SelectItem key={role.id} value={role.id.toString()}>
                         <span className="flex items-center gap-2">
@@ -128,30 +128,30 @@ export default function EmployeesPage() {
                 </Select>
               </div>
               <div>
-                <Label className="text-gray-300">Teléfono</Label>
+                <Label className="text-[#4A3728]">Teléfono</Label>
                 <Input
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="border-[#E8DFD3] bg-[#FFF8F0] text-[#4A3728]"
                 />
               </div>
               <div>
-                <Label className="text-gray-300">DNI</Label>
+                <Label className="text-[#4A3728]">DNI</Label>
                 <Input
                   value={formData.dni}
                   onChange={(e) => setFormData({ ...formData, dni: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="border-[#E8DFD3] bg-[#FFF8F0] text-[#4A3728]"
                 />
               </div>
               <div>
-                <Label className="text-gray-300">Contacto de Emergencia</Label>
+                <Label className="text-[#4A3728]">Contacto de Emergencia</Label>
                 <Input
                   value={formData.emergency_contact}
                   onChange={(e) => setFormData({ ...formData, emergency_contact: e.target.value })}
-                  className="bg-white/5 border-white/10 text-white"
+                  className="border-[#E8DFD3] bg-[#FFF8F0] text-[#4A3728]"
                 />
               </div>
-              <Button type="submit" className="w-full bg-[#E31D2B] hover:bg-[#C41925]">
+              <Button type="submit" className="w-full bg-[#E31D2B] hover:bg-[#C41925] text-white">
                 Crear Empleado
               </Button>
             </form>
@@ -161,10 +161,10 @@ export default function EmployeesPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {employees.map((emp) => (
-          <Card key={emp.id} className="bg-[#1a1a1a] border-white/10">
+          <Card key={emp.id} className="bg-white border-[#E8DFD3] shadow-sm">
             <CardHeader className="pb-2">
               <div className="flex justify-between items-start">
-                <CardTitle className="text-white text-lg">{emp.name}</CardTitle>
+                <CardTitle className="text-[#4A3728] text-lg">{emp.name}</CardTitle>
                 {emp.role && (
                   <Badge
                     style={{ backgroundColor: emp.role.color + '20', color: emp.role.color }}
@@ -176,17 +176,17 @@ export default function EmployeesPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {emp.phone && (
-                <div className="flex items-center gap-2 text-gray-400 text-sm">
+                <div className="flex items-center gap-2 text-[#8B7355] text-sm">
                   <Phone className="h-4 w-4" />
                   {emp.phone}
                 </div>
               )}
-              <div className="flex items-center gap-2 text-gray-400 text-sm">
+              <div className="flex items-center gap-2 text-[#8B7355] text-sm">
                 <Calendar className="h-4 w-4" />
                 Vacaciones: {emp.vacation_remaining || emp.vacation_days_total} días restantes
               </div>
               {(emp.vacation_taken || 0) > 0 && (
-                <div className="flex items-center gap-2 text-amber-400 text-sm">
+                <div className="flex items-center gap-2 text-amber-600 text-sm">
                   <AlertCircle className="h-4 w-4" />
                   {emp.vacation_taken} días tomados
                 </div>
@@ -197,8 +197,8 @@ export default function EmployeesPage() {
       </div>
 
       {employees.length === 0 && (
-        <Card className="bg-[#1a1a1a] border-white/10">
-          <CardContent className="py-10 text-center text-gray-400">
+        <Card className="bg-white border-[#E8DFD3]">
+          <CardContent className="py-10 text-center text-[#8B7355]">
             No hay empleados registrados. ¡Agrega tu primer empleado!
           </CardContent>
         </Card>

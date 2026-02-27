@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Varela+Round&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -12,31 +12,39 @@
 
 @layer base {
   :root {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 8%;
-    --popover-foreground: 0 0% 98%;
+    /* Warm Heladería Theme - Cream & Chocolate */
+    --background: 37 33% 97%;
+    --foreground: 28 25% 18%;
+    --card: 0 0% 100%;
+    --card-foreground: 28 25% 18%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 28 25% 18%;
     --primary: 0 86% 53%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 64%;
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
+    --secondary: 37 33% 94%;
+    --secondary-foreground: 28 25% 18%;
+    --muted: 37 20% 90%;
+    --muted-foreground: 28 15% 45%;
+    --accent: 37 33% 94%;
+    --accent-foreground: 28 25% 18%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 0 0% 15%;
-    --input: 0 0% 15%;
+    --border: 37 20% 85%;
+    --input: 37 20% 85%;
     --ring: 0 86% 53%;
-    --radius: 0.75rem;
+    --radius: 1rem;
+    
+    /* Grido Brand Colors */
+    --grido-red: 0 86% 53%;
+    --grido-cream: 37 33% 94%;
+    --grido-chocolate: 28 25% 18%;
+    --grido-mint: 160 84% 39%;
+    --grido-lemon: 45 93% 56%;
     
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
-    --warning: 38 92% 50%;
-    --warning-foreground: 0 0% 10%;
+    --warning: 45 93% 56%;
+    --warning-foreground: 28 25% 18%;
     --info: 217 91% 60%;
     --info-foreground: 0 0% 100%;
   }
@@ -48,7 +56,25 @@
   }
   
   body {
-    @apply bg-[#0a0a0a] text-foreground font-sans antialiased;
+    @apply bg-[#FFF8F0] text-[#4A3728] font-sans antialiased;
+    background: linear-gradient(135deg, #FFF8F0 0%, #FEF3E2 50%, #FFF8F0 100%);
+    min-height: 100vh;
+  }
+  
+  /* Warm background pattern */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: 
+      radial-gradient(circle at 20% 80%, rgba(227, 29, 43, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(74, 55, 40, 0.03) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(245, 230, 211, 0.3) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: -1;
   }
   
   ::-webkit-scrollbar {
@@ -57,17 +83,17 @@
   }
   
   ::-webkit-scrollbar-track {
-    background: hsl(var(--muted));
+    background: #F5E6D3;
     border-radius: 4px;
   }
   
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground));
+    background: #D4C4B0;
     border-radius: 4px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--foreground));
+    background: #4A3728;
   }
 }
 

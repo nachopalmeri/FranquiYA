@@ -42,15 +42,15 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-border bg-[#0a0a0a]">
+    <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r border-[#E8DFD3] bg-white/80 backdrop-blur-sm shadow-lg">
       <div className="flex h-full flex-col">
-        <div className="flex h-16 items-center gap-3 border-b border-border px-6">
+        <div className="flex h-16 items-center gap-3 border-b border-[#E8DFD3] px-6 bg-gradient-to-r from-white to-[#FEF3E2]">
           <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#E31D2B] shadow-lg shadow-[#E31D2B]/20">
             <IceCreamBowl className="h-5 w-5 text-white" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-white">Grido Smart</h1>
-            <p className="text-xs text-gray-400">{user?.franchise_name || 'Mi Franquicia'}</p>
+            <h1 className="text-lg font-bold text-[#4A3728] font-heading">Grido Smart</h1>
+            <p className="text-xs text-[#8B7355]">{user?.franchise_name || 'Mi Franquicia'}</p>
           </div>
         </div>
 
@@ -62,10 +62,10 @@ export function Sidebar() {
                 key={item.href}
                 href={item.href}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
+                  'flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition-all duration-200',
                   isActive
                     ? 'bg-[#E31D2B] text-white shadow-lg shadow-[#E31D2B]/20'
-                    : 'text-gray-400 hover:bg-secondary hover:text-white'
+                    : 'text-[#6B5B4F] hover:bg-[#F5E6D3] hover:text-[#4A3728]'
                 )}
               >
                 <item.icon className="h-5 w-5" />
@@ -75,12 +75,12 @@ export function Sidebar() {
           })}
         </nav>
 
-        <Separator className="bg-border" />
+        <Separator className="bg-[#E8DFD3]" />
 
         <div className="p-4">
           <Button
             variant="ghost"
-            className="w-full justify-start gap-3 text-gray-400 hover:bg-secondary hover:text-white"
+            className="w-full justify-start gap-3 text-[#8B7355] hover:bg-[#F5E6D3] hover:text-[#4A3728]"
             onClick={handleLogout}
           >
             <LogOut className="h-5 w-5" />

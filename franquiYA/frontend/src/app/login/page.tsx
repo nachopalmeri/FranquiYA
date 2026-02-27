@@ -31,52 +31,52 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[#0a0a0a] p-4">
-      <Card className="w-full max-w-md border-border bg-secondary shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-[#FFF8F0] via-[#FEF3E2] to-[#F5E6D3] p-4">
+      <Card className="w-full max-w-md border-[#E8DFD3] bg-white/90 shadow-2xl backdrop-blur">
         <CardHeader className="text-center">
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E31D2B] shadow-lg shadow-[#E31D2B]/20">
             <IceCreamBowl className="h-10 w-10 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">Grido Smart Ops</CardTitle>
-          <CardDescription className="text-gray-400">
+          <CardTitle className="text-2xl font-bold text-[#4A3728] font-heading">Grido Smart Ops</CardTitle>
+          <CardDescription className="text-[#8B7355]">
             Ingresa a tu cuenta para continuar
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-gray-300">Email</Label>
+              <Label htmlFor="email" className="text-[#4A3728]">Email</Label>
               <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Mail className="absolute left-3 top-3 h-4 w-4 text-[#8B7355]" />
                 <Input
                   id="email"
                   type="email"
                   placeholder="tu@email.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="border-border bg-[#0a0a0a] pl-10 text-white placeholder:text-gray-500"
+                  className="border-[#E8DFD3] bg-[#FFF8F0] pl-10 text-[#4A3728] placeholder:text-[#8B7355]"
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-gray-300">Contraseña</Label>
+              <Label htmlFor="password" className="text-[#4A3728]">Contraseña</Label>
               <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Lock className="absolute left-3 top-3 h-4 w-4 text-[#8B7355]" />
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="border-border bg-[#0a0a0a] pl-10 pr-10 text-white placeholder:text-gray-500"
+                  className="border-[#E8DFD3] bg-[#FFF8F0] pl-10 pr-10 text-[#4A3728] placeholder:text-[#8B7355]"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3 text-gray-400 hover:text-white"
+                  className="absolute right-3 top-3 text-[#8B7355] hover:text-[#4A3728]"
                 >
                   {showPassword ? (
                     <EyeOff className="h-4 w-4" />
@@ -88,14 +88,14 @@ export default function LoginPage() {
             </div>
 
             {error && (
-              <div className="rounded-lg bg-red-500/10 border border-red-500/30 p-3 text-sm text-red-400">
+              <div className="rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-600">
                 {error}
               </div>
             )}
 
             <Button
               type="submit"
-              className="w-full bg-[#E31D2B] hover:bg-[#C41925]"
+              className="w-full bg-[#E31D2B] hover:bg-[#C41925] text-white"
               disabled={loading}
             >
               {loading ? (
@@ -109,9 +109,9 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 rounded-lg bg-[#0a0a0a] border border-border p-4">
-            <p className="text-center text-sm text-gray-400">
-              Demo: <span className="font-mono text-white">admin@grido.com</span> / <span className="font-mono text-white">admin123</span>
+          <div className="mt-6 rounded-xl bg-[#F5E6D3] border border-[#E8DFD3] p-4">
+            <p className="text-center text-sm text-[#8B7355]">
+              Demo: <span className="font-mono font-semibold text-[#4A3728]">admin@grido.com</span> / <span className="font-mono font-semibold text-[#4A3728]">admin123</span>
             </p>
           </div>
         </CardContent>

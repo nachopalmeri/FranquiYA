@@ -10,7 +10,8 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
+        sans: ['Nunito', 'system-ui', 'sans-serif'],
+        heading: ['Varela Round', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
@@ -69,6 +70,8 @@ const config: Config = {
         grido: {
           red: '#E31D2B',
           'red-hover': '#C41925',
+          cream: '#F5E6D3',
+          chocolate: '#4A3728',
         }
       },
       borderRadius: {
@@ -90,11 +93,16 @@ const config: Config = {
           '70%': { boxShadow: '0 0 0 10px rgba(227, 29, 43, 0)' },
           '100%': { boxShadow: '0 0 0 0 rgba(227, 29, 43, 0)' },
         },
+        'bounce-soft': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-5px)' },
+        },
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
         'pulse-ring': 'pulse-ring 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'bounce-soft': 'bounce-soft 2s ease-in-out infinite',
       },
     }
   },
