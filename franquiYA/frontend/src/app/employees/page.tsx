@@ -37,6 +37,7 @@ export default function EmployeesPage() {
     emergency_contact: '',
   })
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadData()
   }, [])

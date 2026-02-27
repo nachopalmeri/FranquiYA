@@ -36,6 +36,7 @@ export default function HolidaysPage() {
     notes: '',
   })
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadData()
   }, [])
@@ -78,7 +79,7 @@ export default function HolidaysPage() {
     }
   }
 
-  const handleStatusChange = async (id: number, status: string) => {
+  const handleStatusChange = async (id: number, status: 'planned' | 'approved' | 'taken') => {
     try {
       await api.holidays.update(id, { status })
       loadData()

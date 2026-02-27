@@ -86,7 +86,7 @@ export default function TasksPage() {
     }
   }
 
-  const handleStatusChange = async (id: number, status: string) => {
+  const handleStatusChange = async (id: number, status: 'pending' | 'in_progress' | 'completed') => {
     try {
       await api.tasks.update(id, { status })
       loadData()

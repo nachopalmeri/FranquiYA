@@ -39,6 +39,7 @@ export default function ShiftsPage() {
     end_time: '16:00',
   })
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     loadData()
   }, [])
