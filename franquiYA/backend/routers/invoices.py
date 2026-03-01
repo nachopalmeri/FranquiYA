@@ -17,18 +17,18 @@ from auth import get_current_active_user, get_admin_user
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 logger = logging.getLogger(__name__)
 
-def parse_with_gemini(text: str) -> Optional[dict]:
-    """Usar Gemini AI para extraer datos estructurados del texto del PDF"""
-    api_key = os.getenv("GOOGLE_API_KEY", "")
+def parse_with_ai(text: str) -> Optional[dict]:
+    """Usar Groq AI para extraer datos estructurados del texto del PDF"""
+    api_key = os.getenv("GROQ_API_KEY", "")
     
     if not api_key:
-        logger.warning("GOOGLE_API_KEY not configured, falling back to regex parser")
+        logger.warning("GROQ_API_KEY not configured, falling back to regex parser")
         return None
     
     try:
-        from google import genai
+        from groq import Groq
         
-        client = genai.Client(api_key=api_key)
+        client = Groq(api_key=api_key)
         
         prompt = f"""Extrae los datos de esta factura de Helacor S.A. (proveedor de helados Grido).
 
@@ -57,11 +57,17 @@ IMPORTANTE:
 - Detecta la unidad de cada producto (7.8kg, 1lt, 12uni, etc)
 - Devuelve solo el JSON, nada más"""
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=prompt
+        response = client.chat.completions.create(
+            model="llama-3.1-70b-versatile",
+            messages=[
+                {"role": "system", "content": "Sos un asistente que extrae datos de facturas. Solo devolvés JSON, sin texto adicional."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.1,
+            max_tokens=2000
         )
-        response_text = response.text.strip()
+        
+        response_text = response.choices[0].message.content.strip()
         
         # Limpiar posibles caracteres de markdown
         if response_text.startswith("```"):
@@ -69,14 +75,14 @@ IMPORTANTE:
             response_text = re.sub(r'\s*```$', '', response_text)
         
         data = json.loads(response_text)
-        logger.info(f"Gemini extracted {len(data.get('lineas', []))} lines")
+        logger.info(f"Groq extracted {len(data.get('lineas', []))} lines")
         return data
         
     except json.JSONDecodeError as e:
-        logger.error(f"Gemini JSON parse error: {e}")
+        logger.error(f"Groq JSON parse error: {e}")
         return None
     except Exception as e:
-        logger.error(f"Gemini API error: {e}")
+        logger.error(f"Groq API error: {e}")
         return None
 
 def extract_unit_from_text(text: str) -> str:
@@ -123,7 +129,7 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
                     raw_text += text + "\n"
         
         # INTENTAR PRIMERO CON GEMINI
-        gemini_result = parse_with_gemini(raw_text)
+        gemini_result = parse_with_ai(raw_text)
         
         if gemini_result and gemini_result.get("lineas"):
             logger.info("Using Gemini parsed data")
@@ -480,7 +486,7 @@ async def debug_invoice(
             
             # Test Gemini extraction
             if os.getenv("GOOGLE_API_KEY"):
-                gemini_result = parse_with_gemini(full_text)
+                gemini_result = parse_with_ai(full_text)
                 debug_info["gemini_result"] = gemini_result
     except Exception as e:
         debug_info["error"] = str(e)

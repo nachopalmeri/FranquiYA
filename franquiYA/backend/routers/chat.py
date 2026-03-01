@@ -63,17 +63,17 @@ def chat(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    api_key = os.getenv("GOOGLE_API_KEY", "")
+    api_key = os.getenv("GROQ_API_KEY", "")
     
     if not api_key:
         return ChatResponse(
-            response="El chatbot no está configurado. Agregá GOOGLE_API_KEY en las variables de entorno."
+            response="El chatbot no está configurado. Agregá GROQ_API_KEY en las variables de entorno."
         )
     
     try:
-        from google import genai
+        from groq import Groq
         
-        client = genai.Client(api_key=api_key)
+        client = Groq(api_key=api_key)
         
         franchise = db.query(Franchise).filter(Franchise.id == current_user.franchise_id).first()
         franchise_name = franchise.name if franchise else "Grido"
@@ -111,16 +111,17 @@ INSTRUCCIONES:
 - Sos útil para: consultar stock, alertas, recomendaciones de pedidos
 - No inventes información, si no sabés algo, decilo"""
 
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=[
-                {"role": "user", "parts": [{"text": system_prompt}]},
-                {"role": "model", "parts": [{"text": f"Entendido, soy el asistente de {franchise_name}. ¿En qué puedo ayudarte?"}]},
-                {"role": "user", "parts": [{"text": request.message}]}
-            ]
+        response = client.chat.completions.create(
+            model="llama-3.1-70b-versatile",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": request.message}
+            ],
+            temperature=0.7,
+            max_tokens=500
         )
         
-        return ChatResponse(response=response.text)
+        return ChatResponse(response=response.choices[0].message.content)
         
     except Exception as e:
         logger.error(f"Chat error: {str(e)}")
