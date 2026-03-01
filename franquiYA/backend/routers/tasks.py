@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from models.task import Task
+from models.task import Task as TaskModel
 from models.employee import Employee
 from schemas import Task, TaskCreate, TaskUpdate, TaskWithDetails
 from auth import get_current_active_user
@@ -18,18 +18,18 @@ def get_tasks(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    query = db.query(Task).filter(
-        Task.franchise_id == current_user.franchise_id
+    query = db.query(TaskModel).filter(
+        TaskModel.franchise_id == current_user.franchise_id
     )
     
     if status:
-        query = query.filter(Task.status == status)
+        query = query.filter(TaskModel.status == status)
     if priority:
-        query = query.filter(Task.priority == priority)
+        query = query.filter(TaskModel.priority == priority)
     if assigned_to:
-        query = query.filter(Task.assigned_to == assigned_to)
+        query = query.filter(TaskModel.assigned_to == assigned_to)
     
-    tasks = query.order_by(Task.created_at.desc()).all()
+    tasks = query.order_by(TaskModel.created_at.desc()).all()
     
     result = []
     for t in tasks:
@@ -49,7 +49,6 @@ def create_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    # Verify employee if assigned
     if task.assigned_to:
         employee = db.query(Employee).filter(
             Employee.id == task.assigned_to,
@@ -58,7 +57,7 @@ def create_task(
         if not employee:
             raise HTTPException(status_code=404, detail="Empleado no encontrado")
     
-    db_task = Task(
+    db_task = TaskModel(
         title=task.title,
         description=task.description,
         priority=task.priority,
@@ -79,9 +78,9 @@ def update_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_task = db.query(Task).filter(
-        Task.id == task_id,
-        Task.franchise_id == current_user.franchise_id
+    db_task = db.query(TaskModel).filter(
+        TaskModel.id == task_id,
+        TaskModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_task:
@@ -112,9 +111,9 @@ def delete_task(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_task = db.query(Task).filter(
-        Task.id == task_id,
-        Task.franchise_id == current_user.franchise_id
+    db_task = db.query(TaskModel).filter(
+        TaskModel.id == task_id,
+        TaskModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_task:
@@ -130,9 +129,8 @@ def get_task_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get task statistics"""
-    tasks = db.query(Task).filter(
-        Task.franchise_id == current_user.franchise_id
+    tasks = db.query(TaskModel).filter(
+        TaskModel.franchise_id == current_user.franchise_id
     ).all()
     
     return {

@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from models.external_event import ExternalEvent
+from models.external_event import ExternalEvent as ExternalEventModel
 from schemas import ExternalEvent, ExternalEventCreate, ExternalEventUpdate
 from auth import get_current_active_user
 
@@ -10,18 +10,18 @@ router = APIRouter(prefix="/external-events", tags=["external_events"])
 
 @router.get("", response_model=list[ExternalEvent])
 def get_external_events(
-    month: str = None,  # "2024-06"
+    month: str = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    query = db.query(ExternalEvent).filter(
-        ExternalEvent.franchise_id == current_user.franchise_id
+    query = db.query(ExternalEventModel).filter(
+        ExternalEventModel.franchise_id == current_user.franchise_id
     )
     
     if month:
-        query = query.filter(ExternalEvent.date.startswith(month))
+        query = query.filter(ExternalEventModel.date.startswith(month))
     
-    return query.order_by(ExternalEvent.date).all()
+    return query.order_by(ExternalEventModel.date).all()
 
 @router.post("", response_model=ExternalEvent)
 def create_external_event(
@@ -29,7 +29,7 @@ def create_external_event(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_event = ExternalEvent(
+    db_event = ExternalEventModel(
         title=event.title,
         description=event.description,
         visitor_name=event.visitor_name,
@@ -52,9 +52,9 @@ def update_external_event(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_event = db.query(ExternalEvent).filter(
-        ExternalEvent.id == event_id,
-        ExternalEvent.franchise_id == current_user.franchise_id
+    db_event = db.query(ExternalEventModel).filter(
+        ExternalEventModel.id == event_id,
+        ExternalEventModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_event:
@@ -89,9 +89,9 @@ def delete_external_event(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_event = db.query(ExternalEvent).filter(
-        ExternalEvent.id == event_id,
-        ExternalEvent.franchise_id == current_user.franchise_id
+    db_event = db.query(ExternalEventModel).filter(
+        ExternalEventModel.id == event_id,
+        ExternalEventModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_event:
@@ -107,10 +107,9 @@ def get_events_calendar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get events organized by month for calendar view"""
-    events = db.query(ExternalEvent).filter(
-        ExternalEvent.franchise_id == current_user.franchise_id,
-        ExternalEvent.status == "scheduled"
+    events = db.query(ExternalEventModel).filter(
+        ExternalEventModel.franchise_id == current_user.franchise_id,
+        ExternalEventModel.status == "scheduled"
     ).all()
     
     calendar = {}

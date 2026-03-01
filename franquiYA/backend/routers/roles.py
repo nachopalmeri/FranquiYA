@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from models.role import Role
+from models.role import Role as RoleModel
 from schemas import Role, RoleCreate
 from auth import get_current_active_user
 
@@ -13,9 +13,9 @@ def get_roles(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    roles = db.query(Role).filter(
-        Role.franchise_id == current_user.franchise_id,
-        Role.is_active == True
+    roles = db.query(RoleModel).filter(
+        RoleModel.franchise_id == current_user.franchise_id,
+        RoleModel.is_active == True
     ).all()
     return roles
 
@@ -25,7 +25,7 @@ def create_role(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_role = Role(
+    db_role = RoleModel(
         name=role.name,
         color=role.color,
         permissions=role.permissions,
@@ -43,9 +43,9 @@ def update_role(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_role = db.query(Role).filter(
-        Role.id == role_id,
-        Role.franchise_id == current_user.franchise_id
+    db_role = db.query(RoleModel).filter(
+        RoleModel.id == role_id,
+        RoleModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_role:
@@ -65,9 +65,9 @@ def delete_role(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_role = db.query(Role).filter(
-        Role.id == role_id,
-        Role.franchise_id == current_user.franchise_id
+    db_role = db.query(RoleModel).filter(
+        RoleModel.id == role_id,
+        RoleModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_role:

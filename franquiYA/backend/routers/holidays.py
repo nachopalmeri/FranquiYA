@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from models.holiday import Holiday
+from models.holiday import Holiday as HolidayModel
 from models.employee import Employee
 from schemas import Holiday, HolidayCreate, HolidayUpdate, HolidayWithEmployee
 from auth import get_current_active_user
@@ -15,9 +15,9 @@ def get_holidays(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    holidays = db.query(Holiday).filter(
-        Holiday.franchise_id == current_user.franchise_id
-    ).order_by(Holiday.start_date.desc()).all()
+    holidays = db.query(HolidayModel).filter(
+        HolidayModel.franchise_id == current_user.franchise_id
+    ).order_by(HolidayModel.start_date.desc()).all()
     
     result = []
     for h in holidays:
@@ -36,7 +36,6 @@ def create_holiday(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    # Verify employee belongs to franchise
     employee = db.query(Employee).filter(
         Employee.id == holiday.employee_id,
         Employee.franchise_id == current_user.franchise_id
@@ -45,10 +44,9 @@ def create_holiday(
     if not employee:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
     
-    # Check vacation balance
-    existing = db.query(Holiday).filter(
-        Holiday.employee_id == holiday.employee_id,
-        Holiday.status.in_(["approved", "taken"])
+    existing = db.query(HolidayModel).filter(
+        HolidayModel.employee_id == holiday.employee_id,
+        HolidayModel.status.in_(["approved", "taken"])
     ).all()
     
     total_taken = sum(h.days_count for h in existing)
@@ -58,7 +56,7 @@ def create_holiday(
             detail=f"Días de vacaciones insuficientes. Disponibles: {employee.vacation_days_total - total_taken}"
         )
     
-    db_holiday = Holiday(
+    db_holiday = HolidayModel(
         employee_id=holiday.employee_id,
         start_date=holiday.start_date,
         end_date=holiday.end_date,
@@ -79,9 +77,9 @@ def update_holiday(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_holiday = db.query(Holiday).filter(
-        Holiday.id == holiday_id,
-        Holiday.franchise_id == current_user.franchise_id
+    db_holiday = db.query(HolidayModel).filter(
+        HolidayModel.id == holiday_id,
+        HolidayModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_holiday:
@@ -103,9 +101,9 @@ def delete_holiday(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_holiday = db.query(Holiday).filter(
-        Holiday.id == holiday_id,
-        Holiday.franchise_id == current_user.franchise_id
+    db_holiday = db.query(HolidayModel).filter(
+        HolidayModel.id == holiday_id,
+        HolidayModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_holiday:
@@ -121,15 +119,14 @@ def get_holidays_calendar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get holidays organized by month"""
-    holidays = db.query(Holiday).filter(
-        Holiday.franchise_id == current_user.franchise_id,
-        Holiday.status.in_(["planned", "approved"])
+    holidays = db.query(HolidayModel).filter(
+        HolidayModel.franchise_id == current_user.franchise_id,
+        HolidayModel.status.in_(["planned", "approved"])
     ).all()
     
     calendar = {}
     for h in holidays:
-        month = h.start_date[:7]  # "2024-06"
+        month = h.start_date[:7]
         if month not in calendar:
             calendar[month] = []
         

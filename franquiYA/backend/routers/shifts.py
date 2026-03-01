@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from models.shift import Shift
+from models.shift import Shift as ShiftModel
 from models.employee import Employee
 from schemas import Shift, ShiftCreate, ShiftUpdate, ShiftWithEmployee
 from auth import get_current_active_user
@@ -16,20 +16,18 @@ def get_shifts(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    shifts = db.query(Shift).filter(
-        Shift.franchise_id == current_user.franchise_id,
-        Shift.is_active == True
+    shifts = db.query(ShiftModel).filter(
+        ShiftModel.franchise_id == current_user.franchise_id,
+        ShiftModel.is_active == True
     ).all()
     
     result = []
     for shift in shifts:
         shift_dict = ShiftWithEmployee.model_validate(shift)
-        # Load employee with role
         emp = db.query(Employee).filter(Employee.id == shift.employee_id).first()
         if emp:
             from schemas import EmployeeWithRole
             emp_dict = EmployeeWithRole.model_validate(emp)
-            # Calculate vacation
             from models.holiday import Holiday
             holidays = db.query(Holiday).filter(
                 Holiday.employee_id == emp.id,
@@ -49,7 +47,6 @@ def create_shift(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    # Verify employee belongs to franchise
     employee = db.query(Employee).filter(
         Employee.id == shift.employee_id,
         Employee.franchise_id == current_user.franchise_id
@@ -58,7 +55,7 @@ def create_shift(
     if not employee:
         raise HTTPException(status_code=404, detail="Empleado no encontrado")
     
-    db_shift = Shift(
+    db_shift = ShiftModel(
         employee_id=shift.employee_id,
         role_id=shift.role_id,
         day_of_week=shift.day_of_week,
@@ -79,9 +76,9 @@ def update_shift(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_shift = db.query(Shift).filter(
-        Shift.id == shift_id,
-        Shift.franchise_id == current_user.franchise_id
+    db_shift = db.query(ShiftModel).filter(
+        ShiftModel.id == shift_id,
+        ShiftModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_shift:
@@ -110,9 +107,9 @@ def delete_shift(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_shift = db.query(Shift).filter(
-        Shift.id == shift_id,
-        Shift.franchise_id == current_user.franchise_id
+    db_shift = db.query(ShiftModel).filter(
+        ShiftModel.id == shift_id,
+        ShiftModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_shift:
@@ -128,10 +125,9 @@ def get_shifts_calendar(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    """Get shifts organized by day of week for calendar view"""
-    shifts = db.query(Shift).filter(
-        Shift.franchise_id == current_user.franchise_id,
-        Shift.is_active == True
+    shifts = db.query(ShiftModel).filter(
+        ShiftModel.franchise_id == current_user.franchise_id,
+        ShiftModel.is_active == True
     ).all()
     
     calendar = {day: [] for day in range(7)}
