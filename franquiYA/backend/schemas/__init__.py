@@ -10,6 +10,11 @@ from .holiday import Holiday, HolidayCreate, HolidayUpdate, HolidayWithEmployee
 from .task import Task, TaskCreate, TaskUpdate, TaskWithDetails
 from .external_event import ExternalEvent, ExternalEventCreate, ExternalEventUpdate
 
+EmployeeWithRole.model_rebuild()
+ShiftWithEmployee.model_rebuild()
+HolidayWithEmployee.model_rebuild()
+TaskWithDetails.model_rebuild()
+
 __all__ = [
     "User", "UserCreate", "LoginRequest", "Token", "SetupData", "LoadProductsRequest",
     "Product", "ProductCreate", "StockAlert", "DashboardStats",
