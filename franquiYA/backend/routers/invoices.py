@@ -58,7 +58,7 @@ IMPORTANTE:
 - Devuelve solo el JSON, nada más"""
 
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": "Sos un asistente que extrae datos de facturas. Solo devolvés JSON, sin texto adicional."},
                 {"role": "user", "content": prompt}

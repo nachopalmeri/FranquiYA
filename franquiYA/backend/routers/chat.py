@@ -112,7 +112,7 @@ INSTRUCCIONES:
 - No inventes información, si no sabés algo, decilo"""
 
         response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",
+            model="llama-3.1-8b-instant",
             messages=[
                 {"role": "system", "content": system_prompt},
                 {"role": "user", "content": request.message}
