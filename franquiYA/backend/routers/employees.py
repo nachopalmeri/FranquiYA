@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
-from models.employee import Employee
+from models.employee import Employee as EmployeeModel
 from models.holiday import Holiday
 from schemas import Employee, EmployeeCreate, EmployeeUpdate, EmployeeWithRole
 from auth import get_current_active_user
@@ -15,15 +15,14 @@ def get_employees(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    employees = db.query(Employee).filter(
-        Employee.franchise_id == current_user.franchise_id,
-        Employee.is_active == True
+    employees = db.query(EmployeeModel).filter(
+        EmployeeModel.franchise_id == current_user.franchise_id,
+        EmployeeModel.is_active == True
     ).all()
     
     result = []
     for emp in employees:
         emp_dict = EmployeeWithRole.model_validate(emp)
-        # Calculate vacation days
         holidays = db.query(Holiday).filter(
             Holiday.employee_id == emp.id,
             Holiday.status.in_(["approved", "taken"])
@@ -41,9 +40,9 @@ def get_employee(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    emp = db.query(Employee).filter(
-        Employee.id == employee_id,
-        Employee.franchise_id == current_user.franchise_id
+    emp = db.query(EmployeeModel).filter(
+        EmployeeModel.id == employee_id,
+        EmployeeModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not emp:
@@ -66,7 +65,7 @@ def create_employee(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_employee = Employee(
+    db_employee = EmployeeModel(
         name=employee.name,
         role_id=employee.role_id,
         phone=employee.phone,
@@ -89,9 +88,9 @@ def update_employee(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_employee = db.query(Employee).filter(
-        Employee.id == employee_id,
-        Employee.franchise_id == current_user.franchise_id
+    db_employee = db.query(EmployeeModel).filter(
+        EmployeeModel.id == employee_id,
+        EmployeeModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_employee:
@@ -124,9 +123,9 @@ def delete_employee(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    db_employee = db.query(Employee).filter(
-        Employee.id == employee_id,
-        Employee.franchise_id == current_user.franchise_id
+    db_employee = db.query(EmployeeModel).filter(
+        EmployeeModel.id == employee_id,
+        EmployeeModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not db_employee:
@@ -143,9 +142,9 @@ def get_vacation_summary(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    emp = db.query(Employee).filter(
-        Employee.id == employee_id,
-        Employee.franchise_id == current_user.franchise_id
+    emp = db.query(EmployeeModel).filter(
+        EmployeeModel.id == employee_id,
+        EmployeeModel.franchise_id == current_user.franchise_id
     ).first()
     
     if not emp:
