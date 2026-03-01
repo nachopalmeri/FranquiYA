@@ -26,10 +26,9 @@ def parse_with_gemini(text: str) -> Optional[dict]:
         return None
     
     try:
-        import google.generativeai as genai
+        from google import genai
         
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        client = genai.Client(api_key=api_key)
         
         prompt = f"""Extrae los datos de esta factura de Helacor S.A. (proveedor de helados Grido).
 
@@ -45,7 +44,8 @@ Devuelve SOLO un JSON válido con esta estructura exacta (sin markdown, sin expl
             "producto": "nombre del producto",
             "cantidad": numero,
             "precio_unitario": numero,
-            "total": numero
+            "total": numero,
+            "unidad": "kg, lt, un, etc"
         }}
     ],
     "total": numero
@@ -54,10 +54,13 @@ Devuelve SOLO un JSON válido con esta estructura exacta (sin markdown, sin expl
 IMPORTANTE:
 - Extrae TODAS las líneas de productos
 - Los precios están en pesos argentinos
-- Si hay productos con diferentes unidades (7.8kg, 1lt, etc), inclúyelos
+- Detecta la unidad de cada producto (7.8kg, 1lt, 12uni, etc)
 - Devuelve solo el JSON, nada más"""
 
-        response = model.generate_content(prompt)
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt
+        )
         response_text = response.text.strip()
         
         # Limpiar posibles caracteres de markdown
@@ -75,6 +78,33 @@ IMPORTANTE:
     except Exception as e:
         logger.error(f"Gemini API error: {e}")
         return None
+
+def extract_unit_from_text(text: str) -> str:
+    """Extraer la unidad del producto del texto"""
+    text_lower = text.lower()
+    if 'kg' in text_lower:
+        match = re.search(r'([\d.,]+)\s*kg', text_lower)
+        if match:
+            return f"{match.group(1)}kg"
+        return "kg"
+    if 'lt' in text_lower or 'lts' in text_lower:
+        match = re.search(r'([\d.,]+)\s*lt', text_lower)
+        if match:
+            return f"{match.group(1)}lt"
+        return "lt"
+    if 'uni' in text_lower or 'un' in text_lower:
+        match = re.search(r'([\d.,]+)\s*uni', text_lower)
+        if match:
+            return f"{match.group(1)}uni"
+        return "uni"
+    if 'cm3' in text_lower:
+        return "cm3"
+    if 'pack' in text_lower or 'pote' in text_lower:
+        match = re.search(r'pack\s*x?\s*(\d+)', text_lower)
+        if match:
+            return f"Pack x{match.group(1)}"
+        return "Pack"
+    return "7.8kg"
 
 def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict:
     import pdfplumber
@@ -108,12 +138,15 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
             
             for linea in gemini_result.get("lineas", []):
                 if linea.get("producto") and linea.get("cantidad"):
+                    unit = linea.get("unidad", "7.8kg")
+                    if not unit or unit == "null":
+                        unit = "7.8kg"
                     lines_data.append({
                         "raw_name": linea["producto"],
                         "quantity": float(linea["cantidad"]),
                         "unit_price": float(linea.get("precio_unitario", 0)),
                         "total": float(linea.get("total", 0)),
-                        "unit": "7.8kg"
+                        "unit": unit
                     })
             
             total = float(gemini_result.get("total", 0))
@@ -127,21 +160,23 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
                     "raw_text": raw_text[:2000]
                 }
         
-        # FALLBACK: Parser con pdfplumber si Gemini falla
-        logger.info("Gemini failed or returned no data, using fallback parser")
+        # FALLBACK: Parser mejorado para Helacor
+        logger.info("Gemini failed or returned no data, using enhanced fallback parser")
         
+        lines_found = False
+        
+        # ESTRATEGIA 1: Tablas con bordes
         with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
             for page_num, page in enumerate(pdf.pages):
-                text = page.extract_text()
-                
-                # ESTRATEGIA 1: Tablas con bordes
                 tables = page.extract_tables()
                 for table in tables:
                     for row in table:
                         if row and len(row) >= 4:
                             try:
                                 name = str(row[0] or "").strip()
-                                if not name or name.lower() in ["código", "descripción", "producto", "total"]:
+                                if not name or name.lower() in ["código", "descripción", "producto", "total", "importe"]:
+                                    continue
+                                if len(name) < 3:
                                     continue
                                 
                                 qty_str = str(row[2] if len(row) > 2 else "0")
@@ -153,67 +188,132 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
                                 line_total = float(re.sub(r'[^\d.]', '', total_str) or 0)
                                 
                                 if name and qty > 0 and price > 0:
+                                    unit = extract_unit_from_text(name)
                                     lines_data.append({
                                         "raw_name": name,
                                         "quantity": qty,
                                         "unit_price": price,
                                         "total": line_total if line_total > 0 else qty * price,
-                                        "unit": "7.8kg"
+                                        "unit": unit
                                     })
                                     total += line_total if line_total > 0 else qty * price
+                                    lines_found = True
                             except (ValueError, TypeError, IndexError):
                                 continue
-                
-                # ESTRATEGIA 2: Tablas sin bordes
-                if not lines_data:
-                    tables_text = page.extract_tables({
-                        "vertical_strategy": "text",
-                        "horizontal_strategy": "text"
-                    })
+        
+        # ESTRATEGIA 2: Extracción por líneas de texto si no hay tablas
+        if not lines_found:
+            logger.info("No tables found, using text-based extraction")
+            with pdfplumber.open(io.BytesIO(file_bytes)) as pdf:
+                for page in pdf.pages:
+                    text = page.extract_text()
+                    if not text:
+                        continue
                     
-                    for table in tables_text:
-                        for row in table:
-                            if row and len(row) >= 3:
+                    for line in text.split('\n'):
+                        line = line.strip()
+                        if not line:
+                            continue
+                        
+                        # Patrones para líneas de factura Helacor
+                        # Formato: CÓDIGO DESCRIPCIÓN CANTIDAD PRECIO UNITARIO IMPORTE
+                        patterns = [
+                            r'^(\d{4,})\s+(.+?)\s+([\d.,]+)\s+\$?([\d.,]+)\s+\$?([\d.,]+)',
+                            r'^(.+?)\s+([\d.,]+)\s+(kg|lt|uni|cm3|pote)\s+\$?([\d.,]+)\s+\$?([\d.,]+)',
+                            r'^(HELADO.+?)\s+([\d.,]+)\s+\$?([\d.,]+)',
+                        ]
+                        
+                        for pattern in patterns:
+                            match = re.search(pattern, line, re.IGNORECASE)
+                            if match:
                                 try:
-                                    name = str(row[0] or "").strip()
-                                    if not name or len(name) < 3:
-                                        continue
-                                    
-                                    numbers = []
-                                    for cell in row[1:]:
-                                        if cell:
-                                            num_str = re.sub(r'[^\d.,]', '', str(cell))
-                                            if num_str:
-                                                num = float(num_str.replace(',', '.'))
-                                                numbers.append(num)
-                                    
-                                    if len(numbers) >= 2 and numbers[0] > 0:
-                                        qty = numbers[0]
-                                        price = numbers[1] if len(numbers) > 1 else 0
-                                        line_total = numbers[2] if len(numbers) > 2 else qty * price
+                                    if len(match.groups()) >= 3:
+                                        name = match.group(1).strip()
+                                        qty_str = match.group(2).strip()
+                                        price_str = match.group(3).strip()
+                                        total_str = match.group(4).strip() if len(match.groups()) >= 4 else "0"
                                         
-                                        lines_data.append({
-                                            "raw_name": name,
-                                            "quantity": qty,
-                                            "unit_price": price,
-                                            "total": line_total,
-                                            "unit": "7.8kg"
-                                        })
-                                        total += line_total
+                                        qty = float(re.sub(r'[^\d.]', '', qty_str))
+                                        price = float(re.sub(r'[^\d.,]', '', price_str).replace(',', '.'))
+                                        line_total = float(re.sub(r'[^\d.,]', '', total_str).replace(',', '.')) if total_str != "0" else qty * price
+                                        
+                                        if name and len(name) > 3 and qty > 0:
+                                            unit = extract_unit_from_text(line)
+                                            lines_data.append({
+                                                "raw_name": name,
+                                                "quantity": qty,
+                                                "unit_price": price,
+                                                "total": line_total,
+                                                "unit": unit
+                                            })
+                                            total += line_total
+                                            lines_found = True
                                 except (ValueError, TypeError):
                                     continue
+        
+        # ESTRATEGIA 3: Buscar patrones de productos en el texto completo
+        if not lines_found:
+            logger.info("Using raw text pattern matching")
+            
+            # Buscar líneas que contengan productos Grido/Helacor
+            product_keywords = ['helado', 'grido', 'bombon', 'cono', 'vaso', 'palito', 'torta', 'kg', 'lt', 'pote', 'uni']
+            
+            for line in raw_text.split('\n'):
+                line_lower = line.lower()
+                if not any(kw in line_lower for kw in product_keywords):
+                    continue
+                    
+                # Buscar números en la línea
+                numbers = re.findall(r'[\d.,]+', line)
+                if len(numbers) < 2:
+                    continue
+                
+                try:
+                    # Extraer nombre (todo antes de los números)
+                    name_match = re.match(r'^([A-Za-z0-9\s\-_]+?)\s+', line)
+                    if not name_match:
+                        continue
+                    
+                    name = name_match.group(1).strip()
+                    if len(name) < 5:
+                        continue
+                    
+                    # Los últimos números son probablemente precios
+                    nums = [float(n.replace(',', '.')) for n in numbers[-3:] if n]
+                    if len(nums) >= 2:
+                        qty = nums[0]
+                        price = nums[1]
+                        line_total = nums[2] if len(nums) >= 3 else qty * price
+                        
+                        if qty > 0 and price > 0:
+                            unit = extract_unit_from_text(line)
+                            lines_data.append({
+                                "raw_name": name,
+                                "quantity": qty,
+                                "unit_price": price,
+                                "total": line_total,
+                                "unit": unit
+                            })
+                            total += line_total
+                            lines_found = True
+                except (ValueError, TypeError):
+                    continue
         
         # Extraer número de factura
         number_patterns = [
             r'N[°º]?\s*(\d{4}[-\s]?\d{8})',
             r'Factura\s*N[°º]?\s*(\d{4}[-\s]?\d{8})',
             r'(\d{4}[-\s]\d{8})',
+            r'F\s*[Aa]\s*(\d{4})[-\s]?(\d{8})',
         ]
         
         for pattern in number_patterns:
             match = re.search(pattern, raw_text, re.IGNORECASE)
             if match:
-                invoice_number = match.group(1).replace(' ', '-')
+                if len(match.groups()) == 2:
+                    invoice_number = f"{match.group(1)}-{match.group(2)}"
+                else:
+                    invoice_number = match.group(1).replace(' ', '-')
                 break
         
         # Extraer fecha
@@ -234,7 +334,7 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
         
         # Extraer total si no se encontró
         if total == 0:
-            total_patterns = [r'Total[:\s]+\$?\s*([\d.,]+)', r'TOTAL[:\s]+\$?\s*([\d.,]+)']
+            total_patterns = [r'Total[:\s]+\$?\s*([\d.,]+)', r'TOTAL[:\s]+\$?\s*([\d.,]+)', r'Importe\s*Total[:\s]+\$?\s*([\d.,]+)']
             for pattern in total_patterns:
                 match = re.search(pattern, raw_text)
                 if match:

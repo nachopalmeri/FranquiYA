@@ -71,7 +71,9 @@ def chat(
         )
     
     try:
-        import google.generativeai as genai
+        from google import genai
+        
+        client = genai.Client(api_key=api_key)
         
         franchise = db.query(Franchise).filter(Franchise.id == current_user.franchise_id).first()
         franchise_name = franchise.name if franchise else "Grido"
@@ -109,14 +111,14 @@ INSTRUCCIONES:
 - Sos útil para: consultar stock, alertas, recomendaciones de pedidos
 - No inventes información, si no sabés algo, decilo"""
 
-        genai.configure(api_key=api_key)
-        model = genai.GenerativeModel('gemini-1.5-flash')
-        
-        response = model.generate_content([
-            {"role": "user", "parts": [system_prompt]},
-            {"role": "model", "parts": [f"Entendido, soy el asistente de {franchise_name}. ¿En qué puedo ayudarte?"]},
-            {"role": "user", "parts": [request.message]}
-        ])
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=[
+                {"role": "user", "parts": [{"text": system_prompt}]},
+                {"role": "model", "parts": [{"text": f"Entendido, soy el asistente de {franchise_name}. ¿En qué puedo ayudarte?"}]},
+                {"role": "user", "parts": [{"text": request.message}]}
+            ]
+        )
         
         return ChatResponse(response=response.text)
         
