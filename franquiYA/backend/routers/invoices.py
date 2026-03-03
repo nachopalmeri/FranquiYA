@@ -12,7 +12,7 @@ from models.user import User
 from models.product import Product
 from models.invoice import Invoice, InvoiceLine
 from schemas import Invoice as InvoiceSchema, ApproveLineRequest
-from auth import get_current_active_user, get_admin_user
+from auth import get_current_active_user, get_admin_user, check_permission
 
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 logger = logging.getLogger(__name__)
@@ -384,7 +384,7 @@ def match_product(raw_name: str, products: List[Product]) -> tuple:
 async def upload_invoice(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)
+    current_user: User = Depends(check_permission("invoices:upload"))
 ):
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Solo se aceptan archivos PDF")
@@ -522,7 +522,7 @@ def approve_line(
     line_id: int,
     request: ApproveLineRequest = ApproveLineRequest(),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)
+    current_user: User = Depends(check_permission("invoices:approve"))
 ):
     invoice = db.query(Invoice).filter(
         Invoice.id == invoice_id,
@@ -551,7 +551,7 @@ def approve_line(
 def approve_all_lines(
     invoice_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)
+    current_user: User = Depends(check_permission("invoices:approve"))
 ):
     invoice = db.query(Invoice).filter(
         Invoice.id == invoice_id,
@@ -574,7 +574,7 @@ def approve_all_lines(
 def confirm_invoice(
     invoice_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_admin_user)
+    current_user: User = Depends(check_permission("invoices:approve"))
 ):
     invoice = db.query(Invoice).filter(
         Invoice.id == invoice_id,

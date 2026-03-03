@@ -5,7 +5,7 @@ from models.user import User
 from models.employee import Employee as EmployeeModel
 from models.holiday import Holiday
 from schemas import Employee, EmployeeCreate, EmployeeUpdate, EmployeeWithRole
-from auth import get_current_active_user
+from auth import get_current_active_user, check_permission
 from typing import List
 
 router = APIRouter(prefix="/employees", tags=["employees"])
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/employees", tags=["employees"])
 @router.get("", response_model=list[EmployeeWithRole])
 def get_employees(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(check_permission("employees:view"))
 ):
     employees = db.query(EmployeeModel).filter(
         EmployeeModel.franchise_id == current_user.franchise_id,
@@ -63,7 +63,7 @@ def get_employee(
 def create_employee(
     employee: EmployeeCreate,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(check_permission("employees:manage"))
 ):
     db_employee = EmployeeModel(
         name=employee.name,
@@ -121,7 +121,7 @@ def update_employee(
 def delete_employee(
     employee_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user: User = Depends(check_permission("employees:manage"))
 ):
     db_employee = db.query(EmployeeModel).filter(
         EmployeeModel.id == employee_id,

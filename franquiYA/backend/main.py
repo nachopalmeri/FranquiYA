@@ -1,9 +1,11 @@
 import os
-from fastapi import FastAPI
+import time
+from collections import defaultdict
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 from database import engine, Base, get_db
-
-# Import all models in order to register them with SQLAlchemy
 from models.user import User
 from models.franchise import Franchise
 from models.product import Product
@@ -42,6 +44,44 @@ app = FastAPI(
     version="1.0.0"
 )
 
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self, app, requests_per_minute: int = 60):
+        super().__init__(app)
+        self.requests_per_minute = requests_per_minute
+        self.request_counts = defaultdict(list)
+    
+    async def dispatch(self, request: Request, call_next):
+        client_ip = request.client.host
+        current_time = time.time()
+        
+        self.request_counts[client_ip] = [
+            req_time for req_time in self.request_counts[client_ip]
+            if current_time - req_time < 60
+        ]
+        
+        if len(self.request_counts[client_ip]) >= self.requests_per_minute:
+            return JSONResponse(
+                status_code=429,
+                content={"detail": "Too many requests. Please try again later."}
+            )
+        
+        self.request_counts[client_ip].append(current_time)
+        response = await call_next(request)
+        return response
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        return response
+
+
 origins = os.getenv("CORS_ORIGINS", "*").split(",")
 if origins == ["*"]:
     allow_origins = ["*"]
@@ -52,9 +92,12 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
 )
+
+app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(RateLimitMiddleware, requests_per_minute=100)
 
 app.include_router(auth_router, prefix="/api")
 app.include_router(stock_router, prefix="/api")
@@ -71,6 +114,7 @@ app.include_router(holidays_router, prefix="/api")
 app.include_router(tasks_router, prefix="/api")
 app.include_router(external_events_router, prefix="/api")
 
+
 @app.get("/")
 def read_root():
     return {
@@ -79,15 +123,18 @@ def read_root():
         "version": "1.0.0"
     }
 
+
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+
 
 @app.on_event("startup")
 def startup_event():
     from seed import seed_database
     db = next(get_db())
     seed_database(db)
+
 
 if __name__ == "__main__":
     import uvicorn
