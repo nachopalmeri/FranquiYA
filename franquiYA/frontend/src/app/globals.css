@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Varela+Round&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -32,7 +32,7 @@
     --border: 37 20% 85%;
     --input: 37 20% 85%;
     --ring: 0 86% 53%;
-    --radius: 1rem;
+    --radius: 0.75rem;
     
     /* Grido Brand Colors */
     --grido-red: 0 86% 53%;
@@ -41,6 +41,7 @@
     --grido-mint: 160 84% 39%;
     --grido-lemon: 45 93% 56%;
     
+    /* Extended Palette */
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
     --warning: 45 93% 56%;
@@ -59,6 +60,16 @@
     @apply bg-[#FFF8F0] text-[#4A3728] font-sans antialiased;
     background: linear-gradient(135deg, #FFF8F0 0%, #FEF3E2 50%, #FFF8F0 100%);
     min-height: 100vh;
+    font-family: 'Fira Sans', sans-serif;
+  }
+
+  /* Font families */
+  .font-heading {
+    font-family: 'Fira Sans', sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'Fira Code', monospace;
   }
   
   /* Warm background pattern */
@@ -77,6 +88,7 @@
     z-index: -1;
   }
   
+  /* Scrollbar styling */
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -94,6 +106,16 @@
   
   ::-webkit-scrollbar-thumb:hover {
     background: #4A3728;
+  }
+
+  /* Focus states for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-[#E31D2B] ring-offset-2;
+  }
+
+  /* Smooth transitions */
+  * {
+    @apply transition-colors duration-150;
   }
 }
 
@@ -156,14 +178,72 @@
   animation: scale-in 0.2s ease-out forwards;
 }
 
+/* Card hover effects */
 .card-hover {
   @apply transition-all duration-200 hover:border-[#E31D2B]/50 hover:shadow-lg hover:shadow-[#E31D2B]/5;
 }
 
+/* Glow effects */
 .glow {
   box-shadow: 0 0 20px rgba(227, 29, 43, 0.3);
 }
 
 .glow-sm {
   box-shadow: 0 0 10px rgba(227, 29, 43, 0.2);
+}
+
+/* Button cursor */
+button, [role="button"] {
+  @apply cursor-pointer;
+}
+
+/* Interactive elements hover */
+.interactive-hover {
+  @apply transition-all duration-200 hover:scale-[1.02] hover:shadow-md;
+}
+
+/* Data-dense table styling */
+.data-table th {
+  @apply text-left text-xs font-semibold text-[#8B7355] uppercase tracking-wider;
+}
+
+.data-table td {
+  @apply text-sm text-[#4A3728];
+}
+
+/* KPI card styling */
+.kpi-card {
+  @apply bg-white rounded-lg border border-[#E8DFD3] p-4 shadow-sm;
+}
+
+.kpi-value {
+  @apply text-3xl font-bold font-mono text-[#4A3728];
+}
+
+.kpi-label {
+  @apply text-sm font-medium text-[#8B7355];
+}
+
+/* Status badges */
+.badge-critical {
+  @apply bg-red-100 text-red-700 border-red-200;
+}
+
+.badge-low {
+  @apply bg-amber-100 text-amber-700 border-amber-200;
+}
+
+.badge-ok {
+  @apply bg-emerald-100 text-emerald-700 border-emerald-200;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

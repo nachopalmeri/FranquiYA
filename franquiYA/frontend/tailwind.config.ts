@@ -10,9 +10,9 @@ const config: Config = {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Nunito', 'system-ui', 'sans-serif'],
-        heading: ['Varela Round', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
+        sans: ['Fira Sans', 'system-ui', 'sans-serif'],
+        heading: ['Fira Sans', 'sans-serif'],
+        mono: ['Fira Code', 'monospace'],
       },
       colors: {
         background: 'hsl(var(--background))',
