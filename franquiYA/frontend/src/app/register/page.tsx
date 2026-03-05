@@ -2,18 +2,15 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
 import { Store, Mail, Lock, Eye, EyeOff, User, Building2, ArrowRight, CheckCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { api } from '@/lib/api'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
 export default function RegisterPage() {
-  const router = useRouter()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -134,8 +131,9 @@ export default function RegisterPage() {
           window.location.href = '/setup'
         }, 2000)
         
-      } catch (err: any) {
-        setError(err.message || 'Error al registrar. Intenta de nuevo.')
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Error al registrar. Intenta de nuevo.'
+        setError(errorMessage)
       } finally {
         setLoading(false)
       }
