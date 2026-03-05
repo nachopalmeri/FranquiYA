@@ -467,22 +467,29 @@ from schemas.invoice import UnknownProduct, InvoiceUploadResponse
 @router.post("/upload", response_model=InvoiceUploadResponse)
 async def upload_invoice(
     file: UploadFile = File(...),
+    franchise_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(check_permission("invoices:upload"))
 ):
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Solo se aceptan archivos PDF")
     
-    # Superadmin needs to specify franchise_id (could be added as parameter)
+    # Determine franchise_id based on user role
     if current_user.role == "superadmin":
-        raise HTTPException(status_code=400, detail="Superadmin debe especificar franchise_id")
-    
-    franchise_id = current_user.franchise_id
+        if franchise_id is None:
+            raise HTTPException(status_code=400, detail="Superadmin debe especificar franchise_id como query parameter")
+        # Verify franchise exists
+        franchise = db.query(Franchise).filter(Franchise.id == franchise_id).first()
+        if not franchise:
+            raise HTTPException(status_code=404, detail="Franquicia no encontrada")
+        target_franchise_id = franchise_id
+    else:
+        target_franchise_id = current_user.franchise_id
     
     file_bytes = await file.read()
     logger.info(f"Uploading invoice: {file.filename}, size: {len(file_bytes)} bytes")
     
-    parsed = parse_invoice_pdf(file_bytes, db, franchise_id)
+    parsed = parse_invoice_pdf(file_bytes, db, target_franchise_id)
     logger.info(f"Parsed invoice: {parsed['number']}, lines: {len(parsed['lines'])}, total: {parsed['total']}")
     
     existing = db.query(Invoice).filter(Invoice.number == parsed["number"]).first()
