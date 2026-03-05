@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional, List, Union
 from datetime import datetime
 
 class InvoiceLineBase(BaseModel):
@@ -41,3 +41,15 @@ class Invoice(InvoiceBase):
 
 class ApproveLineRequest(BaseModel):
     product_id: Optional[int] = None
+
+# --- Added for unknown product feedback ---
+class UnknownProduct(BaseModel):
+    raw_name: str
+    quantity: float
+    unit: str
+    unit_price: float
+    supplier: Optional[str] = None
+
+class InvoiceUploadResponse(BaseModel):
+    invoice: Optional[Invoice]
+    unknown_products: List[UnknownProduct] = []

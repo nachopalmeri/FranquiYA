@@ -12,6 +12,8 @@ from .shifts import router as shifts_router
 from .holidays import router as holidays_router
 from .tasks import router as tasks_router
 from .external_events import router as external_events_router
+from .suppliers import router as suppliers_router
+from .products import router as products_router
 
 __all__ = [
     "auth_router",
@@ -27,5 +29,7 @@ __all__ = [
     "shifts_router",
     "holidays_router",
     "tasks_router",
-    "external_events_router"
+    "external_events_router",
+    "suppliers_router",
+    "products_router",
 ]

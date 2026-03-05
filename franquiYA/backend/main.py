@@ -33,7 +33,9 @@ from routers import (
     shifts_router,
     holidays_router,
     tasks_router,
-    external_events_router
+    external_events_router,
+    suppliers_router,
+    products_router
 )
 
 Base.metadata.create_all(bind=engine)
@@ -113,6 +115,8 @@ app.include_router(shifts_router, prefix="/api")
 app.include_router(holidays_router, prefix="/api")
 app.include_router(tasks_router, prefix="/api")
 app.include_router(external_events_router, prefix="/api")
+app.include_router(suppliers_router, prefix="/api")
+app.include_router(products_router, prefix="/api")
 
 
 @app.get("/")

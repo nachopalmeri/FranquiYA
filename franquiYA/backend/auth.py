@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta
-from typing import Optional, List
+from typing import Optional, List, Any
 from functools import wraps
 from jose import JWTError, jwt
 import bcrypt
@@ -98,7 +98,7 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
 
 
 def get_admin_user(current_user: User = Depends(get_current_active_user)) -> User:
-    if current_user.role != "admin":
+    if current_user.role not in ["admin", "superadmin"]:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. Admin access required."
@@ -106,9 +106,26 @@ def get_admin_user(current_user: User = Depends(get_current_active_user)) -> Use
     return current_user
 
 
+def get_current_franchise_id(current_user: User = Depends(get_current_active_user)) -> int:
+    """Get the franchise_id for the current user. Returns None for superadmin (can see all)."""
+    if current_user.role == "superadmin":
+        return None  # Superadmin can see all franchises
+    return current_user.franchise_id
+
+
+def require_franchise_access():
+    """Dependency that allows admin/superadmin to access all franchises, 
+    but regular users can only access their own franchise data."""
+    def dependency(current_user: User = Depends(get_current_active_user)):
+        if current_user.role in ["admin", "superadmin"]:
+            return None  # Return None to indicate access to all franchises
+        return current_user.franchise_id
+    return dependency
+
+
 def check_permission(permission: str):
     def dependency(current_user: User = Depends(get_current_active_user)):
-        if current_user.role == "admin":
+        if current_user.role in ["admin", "superadmin"]:
             return current_user
         
         from models.role import Role
@@ -140,6 +157,21 @@ def check_permission(permission: str):
         return current_user
     
     return dependency
+
+
+def get_franchise_filter(model_class, franchise_id_column, current_user: User = Depends(get_current_active_user)):
+    """Returns a filter condition for franchise-aware queries.
+    
+    Usage:
+        query = db.query(Model).filter(get_franchise_filter(Model, Model.franchise_id, current_user))
+    
+    For superadmin, returns True (no filter - all franchises).
+    For regular users, returns filter for their franchise_id.
+    """
+    if current_user.role == "superadmin":
+        return True  # No filter - return all
+    
+    return franchise_id_column == current_user.franchise_id
 
 
 def require_permissions(*required_permissions: str):

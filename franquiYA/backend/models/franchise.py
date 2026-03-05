@@ -21,6 +21,7 @@ class Franchise(Base):
     users = relationship("User", back_populates="franchise")
     products = relationship("Product", back_populates="franchise")
     invoices = relationship("Invoice", back_populates="franchise")
+    suppliers = relationship("Supplier", back_populates="franchise")
     roles = relationship("Role", back_populates="franchise")
     employees = relationship("Employee", back_populates="franchise")
     shifts = relationship("Shift", back_populates="franchise")

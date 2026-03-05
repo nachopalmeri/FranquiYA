@@ -17,8 +17,10 @@ class Product(Base):
     image_url = Column(String, nullable=True)
     is_active = Column(Boolean, default=True)
     franchise_id = Column(Integer, ForeignKey("franchises.id"))
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
 
     franchise = relationship("Franchise", back_populates="products")
+    supplier = relationship("Supplier", back_populates="products")
     invoice_lines = relationship("InvoiceLine", back_populates="product")
     audits = relationship("StockAudit", back_populates="product")

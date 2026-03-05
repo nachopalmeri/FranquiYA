@@ -10,6 +10,7 @@ class Invoice(Base):
     number = Column(String, unique=True, index=True)
     date = Column(DateTime)
     supplier = Column(String, default="Helacor S.A.")
+    supplier_id = Column(Integer, ForeignKey("suppliers.id"), nullable=True)
     total = Column(Float, default=0)
     status = Column(String, default="pending")
     raw_text = Column(Text, nullable=True)
@@ -17,6 +18,7 @@ class Invoice(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     franchise = relationship("Franchise", back_populates="invoices")
+    supplier = relationship("Supplier", back_populates="invoices")
     lines = relationship("InvoiceLine", back_populates="invoice", cascade="all, delete-orphan")
 
 class InvoiceLine(Base):

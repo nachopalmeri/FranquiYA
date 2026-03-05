@@ -10,13 +10,13 @@ class UserCreate(UserBase):
     password: str
     role: str = "operator"
     user_type: str = "empleado"  # franquiciado | empleado
-    franchise_id: int
+    franchise_id: Optional[int] = None
 
 class User(UserBase):
     id: int
     role: str
     user_type: str = "empleado"
-    franchise_id: int
+    franchise_id: Optional[int] = None
     franchise_name: Optional[str] = None
     is_active: bool
     requires_setup: bool = False
@@ -45,3 +45,11 @@ class SetupData(BaseModel):
 
 class LoadProductsRequest(BaseModel):
     load_base_products: bool
+
+
+class PublicRegisterRequest(BaseModel):
+    """Request for public registration - creates user + franchise"""
+    email: str
+    password: str
+    name: str
+    franchise_data: dict  # name, owner, city, address

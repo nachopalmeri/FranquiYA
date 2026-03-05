@@ -17,6 +17,20 @@ from auth import get_current_active_user, get_admin_user, check_permission
 router = APIRouter(prefix="/invoices", tags=["invoices"])
 logger = logging.getLogger(__name__)
 
+
+def get_invoice_filter(InvoiceModel, current_user: User):
+    """Get filter for invoices based on user role. Superadmin sees all."""
+    if current_user.role == "superadmin":
+        return True  # No filter
+    return InvoiceModel.franchise_id == current_user.franchise_id
+
+
+def get_product_filter(ProductModel, current_user: User):
+    """Get filter for products based on user role. Superadmin sees all."""
+    if current_user.role == "superadmin":
+        return True  # No filter
+    return ProductModel.franchise_id == current_user.franchise_id
+
 def parse_with_ai(text: str) -> Optional[dict]:
     """Usar Groq AI para extraer datos estructurados del texto del PDF"""
     api_key = os.getenv("GROQ_API_KEY", "")
@@ -30,10 +44,14 @@ def parse_with_ai(text: str) -> Optional[dict]:
         
         client = Groq(api_key=api_key)
         
+        # Truncar texto si es muy largo (límite de tokens)
+        max_chars = 8000
+        truncated_text = text[:max_chars] if len(text) > max_chars else text
+        
         prompt = f"""Extrae los datos de esta factura de Helacor S.A. (proveedor de helados Grido).
 
 TEXTO DE LA FACTURA:
-{text}
+{truncated_text}
 
 Devuelve SOLO un JSON válido con esta estructura exacta (sin markdown, sin explicaciones):
 {{
@@ -68,6 +86,7 @@ IMPORTANTE:
         )
         
         response_text = response.choices[0].message.content.strip()
+        logger.info(f"Groq response preview: {response_text[:200]}...")
         
         # Limpiar posibles caracteres de markdown
         if response_text.startswith("```"):
@@ -77,9 +96,8 @@ IMPORTANTE:
         data = json.loads(response_text)
         logger.info(f"Groq extracted {len(data.get('lineas', []))} lines")
         return data
-        
     except json.JSONDecodeError as e:
-        logger.error(f"Groq JSON parse error: {e}")
+        logger.error(f"Groq returned invalid JSON: {e}")
         return None
     except Exception as e:
         logger.error(f"Groq API error: {e}")
@@ -223,21 +241,25 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
                         
                         # Patrones para líneas de factura Helacor
                         # Formato: CÓDIGO DESCRIPCIÓN CANTIDAD PRECIO UNITARIO IMPORTE
+                        # Formato: DESCRIPCIÓN CANTIDAD KG/LT PRECIO IMPORTE
                         patterns = [
                             r'^(\d{4,})\s+(.+?)\s+([\d.,]+)\s+\$?([\d.,]+)\s+\$?([\d.,]+)',
                             r'^(.+?)\s+([\d.,]+)\s+(kg|lt|uni|cm3|pote)\s+\$?([\d.,]+)\s+\$?([\d.,]+)',
                             r'^(HELADO.+?)\s+([\d.,]+)\s+\$?([\d.,]+)',
+                            # New pattern for "PRODUCTO CANTIDAD,000 KG/PRECIO" format
+                            r'^([A-Za-z\s]+)\s+([\d.,]+)\s+(?:KG|LT|UNI)\s+\$?([\d.,]+)',
                         ]
                         
                         for pattern in patterns:
                             match = re.search(pattern, line, re.IGNORECASE)
                             if match:
                                 try:
-                                    if len(match.groups()) >= 3:
-                                        name = match.group(1).strip()
-                                        qty_str = match.group(2).strip()
-                                        price_str = match.group(3).strip()
-                                        total_str = match.group(4).strip() if len(match.groups()) >= 4 else "0"
+                                    groups = match.groups()
+                                    if len(groups) >= 3:
+                                        name = groups[0].strip()
+                                        qty_str = groups[1].strip()
+                                        price_str = groups[2].strip()
+                                        total_str = groups[3].strip() if len(groups) >= 4 else "0"
                                         
                                         qty = float(re.sub(r'[^\d.]', '', qty_str))
                                         price = float(re.sub(r'[^\d.,]', '', price_str).replace(',', '.'))
@@ -261,49 +283,109 @@ def parse_invoice_pdf(file_bytes: bytes, db: Session, franchise_id: int) -> dict
         if not lines_found:
             logger.info("Using raw text pattern matching")
             
-            # Buscar líneas que contengan productos Grido/Helacor
-            product_keywords = ['helado', 'grido', 'bombon', 'cono', 'vaso', 'palito', 'torta', 'kg', 'lt', 'pote', 'uni']
+            # Helacor format: "PRODUCTO ... QTY PRICE TOTAL ARS"
+            # Example: "LIMON AL AGUA 7,800 KG GRIDO 21.00 % 2 13.014,28 ARS 26.028,56 ARS"
+            helacor_pattern = r'^([A-Z][A-Z0-9\s]{4,}(?:KG|LT|UNI)?(?:\s*GRIDO)?)\s+[\d.,]+\s*%\s+(\d+)\s+([\d.,]+)\s+ARS\s+([\d.,]+)\s+ARS'
             
             for line in raw_text.split('\n'):
-                line_lower = line.lower()
-                if not any(kw in line_lower for kw in product_keywords):
-                    continue
-                    
-                # Buscar números en la línea
-                numbers = re.findall(r'[\d.,]+', line)
-                if len(numbers) < 2:
+                line = line.strip()
+                if not line or len(line) < 20:
                     continue
                 
-                try:
-                    # Extraer nombre (todo antes de los números)
-                    name_match = re.match(r'^([A-Za-z0-9\s\-_]+?)\s+', line)
-                    if not name_match:
-                        continue
-                    
-                    name = name_match.group(1).strip()
-                    if len(name) < 5:
-                        continue
-                    
-                    # Los últimos números son probablemente precios
-                    nums = [float(n.replace(',', '.')) for n in numbers[-3:] if n]
-                    if len(nums) >= 2:
-                        qty = nums[0]
-                        price = nums[1]
-                        line_total = nums[2] if len(nums) >= 3 else qty * price
-                        
-                        if qty > 0 and price > 0:
-                            unit = extract_unit_from_text(line)
-                            lines_data.append({
-                                "raw_name": name,
-                                "quantity": qty,
-                                "unit_price": price,
-                                "total": line_total,
-                                "unit": unit
-                            })
-                            total += line_total
-                            lines_found = True
-                except (ValueError, TypeError):
+                # Skip header lines
+                lower_line = line.lower()
+                if any(skip in lower_line for skip in ['factura', 'cuit', 'código', 'localidad', 'domicilio', 'teléfono', 'email', 'IVA RESPONSABLE']):
                     continue
+                
+                # Try Helacor pattern
+                match = re.match(helacor_pattern, line, re.IGNORECASE)
+                if match:
+                    try:
+                        name = match.group(1).strip()
+                        qty = float(match.group(2))
+                        price = float(match.group(3).replace('.', '').replace(',', '.'))
+                        total = float(match.group(4).replace('.', '').replace(',', '.'))
+                        
+                        if name and len(name) > 5 and qty > 0 and price > 0:
+                            unit = extract_unit_from_text(line)
+                            if unit == "7.8kg" and "KG" in line.upper():
+                                unit = "7.8kg"
+                            elif unit == "1lt" and "LT" in line.upper():
+                                unit = "1lt"
+                            
+                            if not any(l['raw_name'] == name and l['quantity'] == qty for l in lines_data):
+                                lines_data.append({
+                                    "raw_name": name,
+                                    "quantity": qty,
+                                    "unit_price": price,
+                                    "total": total,
+                                    "unit": unit
+                                })
+                                total += total
+                                lines_found = True
+                                logger.info(f"Found line via Helacor pattern: {name}, qty: {qty}")
+                    except (ValueError, TypeError):
+                        continue
+            
+            # Original pattern matching as fallback
+            product_keywords = ['helado', 'grido', 'bombon', 'cono', 'vaso', 'palito', 'torta', 'kg', 'lt', 'pote', 'uni', 'agua', 'leche', 'crema']
+            
+            # More flexible pattern matching for Helacor invoices
+            # Matches: PRODUCTO CANTIDAD KG $PRECIO or PRODUCTO CANTIDAD,000 KG/PRECIO
+            text_patterns = [
+                r'^([A-Za-z\s]{4,})\s+([\d.,]+)\s*(kg|lt|uni|pote)?\s*\$?\s*([\d.,]+)',
+                r'([A-Za-z\s]{4,})\s+([\d.,]+)\s*(kg|lt|uni|pote)?.*?\$?\s*([\d.,]+)',
+            ]
+            
+            for line in raw_text.split('\n'):
+                line = line.strip()
+                if not line or len(line) < 10:
+                    continue
+                
+                # Skip header/footer lines
+                if any(skip in line.lower() for skip in ['factura', 'total', 'subtotal', 'iva', 'importe', 'fecha', 'cuit', 'direccion', 'teléfono']):
+                    if not any(kw in line.lower() for kw in product_keywords):
+                        continue
+                
+                for pattern in text_patterns:
+                    match = re.match(pattern, line, re.IGNORECASE)
+                    if match:
+                        try:
+                            name = match.group(1).strip()
+                            qty_str = match.group(2).strip()
+                            
+                            # Get price from the appropriate group
+                            if match.lastindex and match.lastindex >= 4:
+                                price_str = match.group(4)
+                            elif match.lastindex and match.lastindex >= 3:
+                                price_str = match.group(3)
+                            else:
+                                continue
+                            
+                            if not price_str:
+                                continue
+                            
+                            qty = float(re.sub(r'[^\d.]', '', qty_str))
+                            price = float(re.sub(r'[^\d.,]', '', price_str).replace(',', '.'))
+                            
+                            if name and len(name) > 4 and qty > 0 and price > 0:
+                                unit = extract_unit_from_text(line)
+                                line_total = qty * price
+                                
+                                # Avoid duplicates
+                                if not any(l['raw_name'] == name and l['quantity'] == qty for l in lines_data):
+                                    lines_data.append({
+                                        "raw_name": name,
+                                        "quantity": qty,
+                                        "unit_price": price,
+                                        "total": line_total,
+                                        "unit": unit
+                                    })
+                                    total += line_total
+                                    lines_found = True
+                                    logger.info(f"Found line via text pattern: {name}, qty: {qty}, price: {price}")
+                        except (ValueError, TypeError) as e:
+                            continue
         
         # Extraer número de factura
         number_patterns = [
@@ -380,7 +462,9 @@ def match_product(raw_name: str, products: List[Product]) -> tuple:
     
     return None, clean_name
 
-@router.post("/upload", response_model=InvoiceSchema)
+from schemas.invoice import UnknownProduct, InvoiceUploadResponse
+
+@router.post("/upload", response_model=InvoiceUploadResponse)
 async def upload_invoice(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
@@ -389,16 +473,25 @@ async def upload_invoice(
     if not file.filename or not file.filename.lower().endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Solo se aceptan archivos PDF")
     
+    # Superadmin needs to specify franchise_id (could be added as parameter)
+    if current_user.role == "superadmin":
+        raise HTTPException(status_code=400, detail="Superadmin debe especificar franchise_id")
+    
+    franchise_id = current_user.franchise_id
+    
     file_bytes = await file.read()
     logger.info(f"Uploading invoice: {file.filename}, size: {len(file_bytes)} bytes")
     
-    parsed = parse_invoice_pdf(file_bytes, db, current_user.franchise_id)
+    parsed = parse_invoice_pdf(file_bytes, db, franchise_id)
     logger.info(f"Parsed invoice: {parsed['number']}, lines: {len(parsed['lines'])}, total: {parsed['total']}")
     
     existing = db.query(Invoice).filter(Invoice.number == parsed["number"]).first()
     if existing:
         logger.info(f"Invoice {parsed['number']} already exists")
-        return InvoiceSchema.model_validate(existing)
+        return InvoiceUploadResponse(
+            invoice=InvoiceSchema.model_validate(existing),
+            unknown_products=[]
+        )
     
     invoice = Invoice(
         number=parsed["number"],
@@ -406,20 +499,22 @@ async def upload_invoice(
         supplier="Helacor S.A.",
         total=parsed["total"],
         raw_text=parsed["raw_text"],
-        franchise_id=current_user.franchise_id,
+        franchise_id=franchise_id,
         status="pending"
     )
     db.add(invoice)
     db.flush()
     
-    products = db.query(Product).filter(
-        Product.franchise_id == current_user.franchise_id
-    ).all()
+    product_filter = get_product_filter(Product, current_user)
+    products_query = db.query(Product)
+    if product_filter is not True:
+        products_query = products_query.filter(product_filter)
+    products = products_query.all()
     
     matched_count = 0
+    unknown_products = []
     for line_data in parsed["lines"]:
         product, matched_name = match_product(line_data["raw_name"], products)
-        
         previous_price = None
         price_change = 0
         if product:
@@ -427,7 +522,14 @@ async def upload_invoice(
             previous_price = product.unit_price
             if previous_price and previous_price > 0:
                 price_change = round(((line_data["unit_price"] - previous_price) / previous_price) * 100, 1)
-        
+        else:
+            unknown_products.append(UnknownProduct(
+                raw_name=line_data["raw_name"],
+                quantity=line_data["quantity"],
+                unit=line_data["unit"],
+                unit_price=line_data["unit_price"],
+                supplier=invoice.supplier
+            ))
         line = InvoiceLine(
             invoice_id=invoice.id,
             raw_name=line_data["raw_name"],
@@ -443,12 +545,16 @@ async def upload_invoice(
         )
         db.add(line)
     
-    logger.info(f"Created invoice {invoice.id} with {len(parsed['lines'])} lines, {matched_count} matched")
+    logger.info(f"Created invoice {invoice.id} with {len(parsed['lines'])} lines, {matched_count} matched, {len(unknown_products)} unknown")
     
     db.commit()
     db.refresh(invoice)
     
-    return InvoiceSchema.model_validate(invoice)
+    return InvoiceUploadResponse(
+        invoice=InvoiceSchema.model_validate(invoice),
+        unknown_products=unknown_products
+    )
+
 
 @router.post("/debug")
 async def debug_invoice(
@@ -493,14 +599,85 @@ async def debug_invoice(
     
     return debug_info
 
+@router.post("/{invoice_id}/reprocess")
+def reprocess_invoice(
+    invoice_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(check_permission("invoices:upload"))
+):
+    """Re-process an invoice to extract lines from raw_text"""
+    franchise_filter = get_invoice_filter(Invoice, current_user)
+    query = db.query(Invoice).filter(Invoice.id == invoice_id)
+    if franchise_filter is not True:
+        query = query.filter(franchise_filter)
+    invoice = query.first()
+    if not invoice:
+        raise HTTPException(status_code=404, detail="Factura no encontrada")
+    
+    if not invoice.raw_text:
+        raise HTTPException(status_code=400, detail="La factura no tiene texto sin procesar")
+    
+    # Re-parse using AI
+    parsed = parse_with_ai(invoice.raw_text)
+    
+    if parsed and parsed.get("lineas"):
+        # Clear existing lines
+        db.query(InvoiceLine).filter(InvoiceLine.invoice_id == invoice.id).delete()
+        
+        # Add new lines
+        products = db.query(Product).filter(
+            Product.franchise_id == current_user.franchise_id
+        ).all()
+        
+        for linea in parsed.get("lineas", []):
+            if linea.get("producto") and linea.get("cantidad"):
+                unit = linea.get("unidad", "7.8kg")
+                if not unit or unit == "null":
+                    unit = "7.8kg"
+                
+                product, matched_name = match_product(linea["producto"], products)
+                
+                line = InvoiceLine(
+                    invoice_id=invoice.id,
+                    raw_name=linea["producto"],
+                    matched_name=matched_name,
+                    quantity=float(linea["cantidad"]),
+                    unit_price=float(linea.get("precio_unitario", 0)),
+                    total=float(linea.get("total", 0)),
+                    unit=unit,
+                    is_matched=product is not None,
+                    product_id=product.id if product else None
+                )
+                db.add(line)
+        
+        if parsed.get("total"):
+            invoice.total = float(parsed["total"])
+        
+        db.commit()
+        db.refresh(invoice)
+        
+        return {"success": True, "lines_count": len(parsed.get("lineas", [])), "invoice": InvoiceSchema.model_validate(invoice)}
+    
+    raise HTTPException(status_code=400, detail="No se pudieron extraer líneas de la factura")
+
 @router.get("", response_model=List[InvoiceSchema])
 def list_invoices(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    return db.query(Invoice).filter(
-        Invoice.franchise_id == current_user.franchise_id
-    ).order_by(Invoice.created_at.desc()).all()
+    franchise_filter = get_invoice_filter(Invoice, current_user)
+    query = db.query(Invoice)
+    if franchise_filter is not True:
+        query = query.filter(franchise_filter)
+    return query.order_by(Invoice.created_at.desc()).all()
+
+@router.get("/all", response_model=List[InvoiceSchema])
+def list_all_invoices(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user)
+):
+    """Get all invoices - admin/superadmin only"""
+    return db.query(Invoice).order_by(Invoice.created_at.desc()).all()
 
 @router.get("/{invoice_id}", response_model=InvoiceSchema)
 def get_invoice(
@@ -508,10 +685,11 @@ def get_invoice(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_active_user)
 ):
-    invoice = db.query(Invoice).filter(
-        Invoice.id == invoice_id,
-        Invoice.franchise_id == current_user.franchise_id
-    ).first()
+    franchise_filter = get_invoice_filter(Invoice, current_user)
+    query = db.query(Invoice).filter(Invoice.id == invoice_id)
+    if franchise_filter is not True:
+        query = query.filter(franchise_filter)
+    invoice = query.first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
     return InvoiceSchema.model_validate(invoice)
@@ -576,10 +754,11 @@ def confirm_invoice(
     db: Session = Depends(get_db),
     current_user: User = Depends(check_permission("invoices:approve"))
 ):
-    invoice = db.query(Invoice).filter(
-        Invoice.id == invoice_id,
-        Invoice.franchise_id == current_user.franchise_id
-    ).first()
+    franchise_filter = get_invoice_filter(Invoice, current_user)
+    query = db.query(Invoice).filter(Invoice.id == invoice_id)
+    if franchise_filter is not True:
+        query = query.filter(franchise_filter)
+    invoice = query.first()
     if not invoice:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
     

@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useAuth } from '@/components/layout/auth-provider'
+import Link from 'next/link'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -112,6 +113,15 @@ export default function LoginPage() {
           <div className="mt-6 rounded-xl bg-[#F5E6D3] border border-[#E8DFD3] p-4">
             <p className="text-center text-sm text-[#8B7355]">
               Demo: <span className="font-mono font-semibold text-[#4A3728]">admin@grido.com</span> / <span className="font-mono font-semibold text-[#4A3728]">admin123</span>
+            </p>
+          </div>
+
+          <div className="mt-6 text-center">
+            <p className="text-sm text-[#8B7355]">
+              ¿No tenés una cuenta?{' '}
+              <Link href="/register" className="font-semibold text-[#E31D2B] hover:underline">
+                Crear cuenta
+              </Link>
             </p>
           </div>
         </CardContent>

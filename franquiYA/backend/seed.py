@@ -231,6 +231,29 @@ def seed_database(db):
         db.flush()
         print("Franchise Admin (empty) created")
     
+    # ============================================
+    # SUPERADMIN: Acceso a todas las franquicias
+    # ============================================
+    superadmin = db.query(User).filter(User.email == "superadmin@grido.com").first()
+    if superadmin:
+        superadmin.hashed_password = get_password_hash("superadmin123")
+        superadmin.role = "superadmin"
+        print("Superadmin password updated")
+    else:
+        superadmin = User(
+            email="superadmin@grido.com",
+            name="Super Admin",
+            hashed_password=get_password_hash("superadmin123"),
+            role="superadmin",
+            user_type="admin",
+            franchise_id=None,  # Superadmin no tied to a franchise
+            is_active=True,
+            requires_setup=False,
+            completed_tour=True
+        )
+        db.add(superadmin)
+        print("Superadmin user created")
+    
     # Usuario Admin - Requiere setup
     admin_user = db.query(User).filter(User.email == "admin@grido.com").first()
     if admin_user:

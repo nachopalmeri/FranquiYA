@@ -82,3 +82,71 @@ def auth_headers(client, test_user):
     })
     token = response.json()["access_token"]
     return {"Authorization": f"Bearer {token}"}
+
+# --- NUEVAS FIXTURES PARA TESTS CRUD AVANZADOS ---
+
+@pytest.fixture(scope="function")
+def another_franchise(db_session):
+    franchise = Franchise(
+        code="TEST002",
+        name="Another Franchise",
+        owner="Otra Persona",
+        cuit="23-88888888-1",
+        address="Other Address",
+        city="Other City",
+        province="Other Province",
+        weather_city="Other City,AR",
+        supplier="Other Supplier"
+    )
+    db_session.add(franchise)
+    db_session.commit()
+    db_session.refresh(franchise)
+    return franchise
+
+@pytest.fixture(scope="function")
+def other_admin_user(db_session, another_franchise):
+    user = User(
+        email="otheradmin@test.com",
+        name="Other Admin",
+        hashed_password=get_password_hash("other123"),
+        role="admin",
+        franchise_id=another_franchise.id,
+        is_active=True
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+@pytest.fixture(scope="function")
+def other_admin_headers(client, other_admin_user):
+    response = client.post("/api/auth/login", json={
+        "email": "otheradmin@test.com",
+        "password": "other123"
+    })
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}
+
+@pytest.fixture(scope="function")
+def superadmin_user(db_session):
+    user = User(
+        email="super@test.com",
+        name="Super Admin",
+        hashed_password=get_password_hash("super123"),
+        role="superadmin",
+        # superadmin no necesita franchise_id
+        is_active=True
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+@pytest.fixture(scope="function")
+def superadmin_headers(client, superadmin_user):
+    response = client.post("/api/auth/login", json={
+        "email": "super@test.com",
+        "password": "super123"
+    })
+    token = response.json()["access_token"]
+    return {"Authorization": f"Bearer {token}"}

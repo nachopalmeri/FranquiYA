@@ -5,7 +5,7 @@ from database import get_db
 from models.user import User
 from models.franchise import Franchise
 from models.product import Product
-from schemas import User as UserSchema, LoginRequest, Token, SetupData, LoadProductsRequest
+from schemas import User as UserSchema, LoginRequest, Token, SetupData, LoadProductsRequest, PublicRegisterRequest
 from auth import (
     verify_password,
     get_password_hash,
@@ -77,6 +77,68 @@ def register(
     db.refresh(user)
     
     return UserSchema.model_validate(user)
+
+@router.post("/register/public", response_model=Token)
+def register_public(
+    request: PublicRegisterRequest,
+    db: Session = Depends(get_db)
+):
+    """Public registration - creates user + franchise without authentication"""
+    # Check if email already exists
+    if db.query(User).filter(User.email == request.email).first():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email ya registrado"
+        )
+    
+    # Extract franchise data
+    franchise_data = request.franchise_data or {}
+    franchise_name = franchise_data.get('name', 'Nuevo Negocio')
+    franchise_city = franchise_data.get('city', 'Buenos Aires')
+    
+    # Create franchise first
+    franchise = Franchise(
+        code=f"F{datetime.now().strftime('%Y%m%d%H%M%S')}",
+        name=franchise_name,
+        owner=request.name,
+        city=franchise_city,
+        address=franchise_data.get('address', ''),
+        province=franchise_data.get('province', 'Buenos Aires'),
+        weather_city=f"{franchise_city},AR",
+        supplier="Helacor S.A."
+    )
+    db.add(franchise)
+    db.flush()  # Get franchise ID
+    
+    # Create admin user for the franchise
+    user = User(
+        email=request.email,
+        name=request.name,
+        hashed_password=get_password_hash(request.password),
+        franchise_id=franchise.id,
+        role="admin",
+        user_type="franquiciado",
+        is_active=True,
+        requires_setup=True,
+        completed_tour=False
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    # Create access token
+    access_token = create_access_token(data={"sub": user.email})
+    
+    # Build response
+    franchise_obj = db.query(Franchise).filter(Franchise.id == user.franchise_id).first()
+    user_dict = UserSchema.model_validate(user).model_dump()
+    user_dict['franchise_name'] = franchise_obj.name if franchise_obj else None
+    
+    return Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserSchema(**user_dict)
+    )
 
 @router.post("/setup")
 def complete_setup(

@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Optional
+from typing import Optional, List
 from pydantic import BaseModel
 from database import get_db
 from models.user import User
 from models.franchise import Franchise
 from schemas import Franchise as FranchiseSchema
-from auth import get_current_active_user
+from auth import get_current_active_user, get_admin_user
 
 router = APIRouter(prefix="/franchise", tags=["franchise"])
 
@@ -19,6 +19,15 @@ class FranchiseUpdate(BaseModel):
     province: Optional[str] = None
     weather_city: Optional[str] = None
     supplier: Optional[str] = None
+
+@router.get("/all", response_model=List[FranchiseSchema])
+def get_all_franchises(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_admin_user)
+):
+    """Get all franchises - admin/superadmin only"""
+    franchises = db.query(Franchise).all()
+    return [FranchiseSchema.model_validate(f) for f in franchises]
 
 @router.get("", response_model=FranchiseSchema)
 def get_franchise(
