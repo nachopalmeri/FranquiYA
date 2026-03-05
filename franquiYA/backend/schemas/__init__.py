@@ -1,4 +1,4 @@
-from .user import User, UserCreate, LoginRequest, Token, SetupData, LoadProductsRequest
+from .user import User, UserCreate, LoginRequest, Token, SetupData, LoadProductsRequest, PublicRegisterRequest
 from .product import Product, ProductCreate, StockAlert, DashboardStats
 from .invoice import Invoice, InvoiceLine, ApproveLineRequest
 from .weather import WeatherData, WeatherForecast
@@ -16,7 +16,7 @@ HolidayWithEmployee.model_rebuild()
 TaskWithDetails.model_rebuild()
 
 __all__ = [
-    "User", "UserCreate", "LoginRequest", "Token", "SetupData", "LoadProductsRequest",
+    "User", "UserCreate", "LoginRequest", "Token", "SetupData", "LoadProductsRequest", "PublicRegisterRequest",
     "Product", "ProductCreate", "StockAlert", "DashboardStats",
     "Invoice", "InvoiceLine", "ApproveLineRequest",
     "WeatherData", "WeatherForecast",

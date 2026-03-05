@@ -1,4 +1,5 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
 from database import get_db
@@ -17,8 +18,36 @@ from seed import PRODUCTS_DATA
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
+def create_token_response(user: User, db: Session, response: Response = None):
+    """Helper to create token response with cookie"""
+    access_token = create_access_token(data={"sub": user.email})
+    
+    franchise = db.query(Franchise).filter(Franchise.id == user.franchise_id).first()
+    user_dict = UserSchema.model_validate(user).model_dump()
+    user_dict['franchise_name'] = franchise.name if franchise else None
+    
+    token_data = Token(
+        access_token=access_token,
+        token_type="bearer",
+        user=UserSchema(**user_dict)
+    )
+    
+    # Set httpOnly cookie
+    if response:
+        response.set_cookie(
+            key="token",
+            value=access_token,
+            httponly=True,
+            secure=True,  # True in production (HTTPS)
+            samesite="lax",
+            max_age=60 * 60 * 24  # 24 hours
+        )
+    
+    return token_data
+
+
 @router.post("/login", response_model=Token)
-def login(request: LoginRequest, db: Session = Depends(get_db)):
+def login(request: LoginRequest, db: Session = Depends(get_db), response: Response = None):
     user = db.query(User).filter(User.email == request.email).first()
     
     if not user or not verify_password(request.password, user.hashed_password):
@@ -33,17 +62,7 @@ def login(request: LoginRequest, db: Session = Depends(get_db)):
             detail="Usuario inactivo"
         )
     
-    access_token = create_access_token(data={"sub": user.email})
-    
-    franchise = db.query(Franchise).filter(Franchise.id == user.franchise_id).first()
-    user_dict = UserSchema.model_validate(user).model_dump()
-    user_dict['franchise_name'] = franchise.name if franchise else None
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserSchema(**user_dict)
-    )
+    return create_token_response(user, db, response)
 
 @router.get("/me", response_model=UserSchema)
 def get_me(current_user: User = Depends(get_current_active_user), db: Session = Depends(get_db)):
@@ -81,7 +100,8 @@ def register(
 @router.post("/register/public", response_model=Token)
 def register_public(
     request: PublicRegisterRequest,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    response: Response = None
 ):
     """Public registration - creates user + franchise without authentication"""
     # Check if email already exists
@@ -126,19 +146,8 @@ def register_public(
     db.commit()
     db.refresh(user)
     
-    # Create access token
-    access_token = create_access_token(data={"sub": user.email})
-    
-    # Build response
-    franchise_obj = db.query(Franchise).filter(Franchise.id == user.franchise_id).first()
-    user_dict = UserSchema.model_validate(user).model_dump()
-    user_dict['franchise_name'] = franchise_obj.name if franchise_obj else None
-    
-    return Token(
-        access_token=access_token,
-        token_type="bearer",
-        user=UserSchema(**user_dict)
-    )
+    # Use helper to create token and set cookie
+    return create_token_response(user, db, response)
 
 @router.post("/setup")
 def complete_setup(
@@ -210,3 +219,15 @@ def complete_tour(
     current_user.completed_tour = True
     db.commit()
     return {"message": "Tour completado"}
+
+
+@router.post("/logout")
+def logout(response: Response):
+    """Logout - clear the auth cookie"""
+    response.delete_cookie(
+        key="token",
+        httponly=True,
+        secure=True,
+        samesite="lax"
+    )
+    return {"message": "Logged out successfully"}
