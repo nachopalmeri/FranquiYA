@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 
 class FranchiseBase(BaseModel):
     code: str
@@ -14,6 +14,7 @@ class FranchiseBase(BaseModel):
 
 class Franchise(FranchiseBase):
     id: int
+    settings: Optional[Dict[str, Any]] = None
 
     class Config:
         from_attributes = True

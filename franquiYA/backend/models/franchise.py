@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String, DateTime, JSON
 from sqlalchemy.orm import relationship
 from database import Base
 
@@ -17,6 +17,13 @@ class Franchise(Base):
     weather_city = Column(String, default="Lanus,AR")
     supplier = Column(String, default="Helacor S.A.")
     created_at = Column(DateTime, default=datetime.utcnow)
+    
+    # Settings JSON for theming and modules
+    settings = Column(JSON, default={
+        "theme": "modern",
+        "business_type": "heladeria",
+        "modules": ["stock", "invoices", "employees", "tasks", "calendar", "chat"]
+    })
 
     users = relationship("User", back_populates="franchise")
     products = relationship("Product", back_populates="franchise")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 from database import get_db
 from models.user import User
@@ -19,6 +19,7 @@ class FranchiseUpdate(BaseModel):
     province: Optional[str] = None
     weather_city: Optional[str] = None
     supplier: Optional[str] = None
+    settings: Optional[Dict[str, Any]] = None
 
 @router.get("/all", response_model=List[FranchiseSchema])
 def get_all_franchises(
