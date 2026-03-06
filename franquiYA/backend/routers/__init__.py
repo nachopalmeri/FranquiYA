@@ -14,6 +14,7 @@ from .tasks import router as tasks_router
 from .external_events import router as external_events_router
 from .suppliers import router as suppliers_router
 from .products import router as products_router
+from .pay import router as pay_router
 
 __all__ = [
     "auth_router",
@@ -32,4 +33,5 @@ __all__ = [
     "external_events_router",
     "suppliers_router",
     "products_router",
+    "pay_router",
 ]

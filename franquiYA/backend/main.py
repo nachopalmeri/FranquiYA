@@ -18,6 +18,7 @@ from models.task import Task
 from models.external_event import ExternalEvent
 from models.attendance import Attendance
 from models.audit import StockAudit
+from models.pay import Customer, CashRegister, CashMovement, Sale, SaleItem
 
 from routers import (
     auth_router,
@@ -35,7 +36,8 @@ from routers import (
     tasks_router,
     external_events_router,
     suppliers_router,
-    products_router
+    products_router,
+    pay_router
 )
 
 Base.metadata.create_all(bind=engine)
@@ -117,6 +119,7 @@ app.include_router(tasks_router, prefix="/api")
 app.include_router(external_events_router, prefix="/api")
 app.include_router(suppliers_router, prefix="/api")
 app.include_router(products_router, prefix="/api")
+app.include_router(pay_router, prefix="/api")
 
 
 @app.get("/")

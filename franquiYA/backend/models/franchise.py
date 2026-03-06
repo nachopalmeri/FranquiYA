@@ -36,3 +36,6 @@ class Franchise(Base):
     external_events = relationship("ExternalEvent", back_populates="franchise")
     tasks = relationship("Task", back_populates="franchise")
     attendances = relationship("Attendance", back_populates="franchise")
+    customers = relationship("Customer", back_populates="franchise")
+    cash_registers = relationship("CashRegister", back_populates="franchise")
+    sales = relationship("Sale", back_populates="franchise")
