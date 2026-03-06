@@ -22,6 +22,11 @@ export interface Franchise {
   province: string;
   weather_city: string;
   supplier: string;
+  settings?: {
+    theme?: string;
+    business_type?: string;
+    modules?: string[];
+  };
 }
 
 export interface Product {

@@ -121,7 +121,7 @@ export const availableModules: ModuleConfig[] = [
   {
     id: 'invoices',
     name: ' Proveedores',
-    descriptionFacturación: 'Conciliación de facturas PDF',
+    description: 'Conciliación de facturas PDF',
     icon: 'FileText',
     enabled: true,
     required: false,

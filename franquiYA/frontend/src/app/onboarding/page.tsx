@@ -3,12 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { 
-  Store, Building2, Palette, Package, FileText, Users, 
+  Store, Palette, Package, FileText, Users, 
   ShoppingCart, DollarSign, UserCheck, Calendar, CheckSquare, 
   MessageCircle, ArrowRight, ArrowLeft, Check, Sparkles
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Badge } from '@/components/ui/badge'
@@ -60,8 +60,8 @@ export default function OnboardingPage() {
   }
 
   const toggleModule = (moduleId: string) => {
-    const module = availableModules.find(m => m.id === moduleId)
-    if (module?.required) return // Can't toggle required modules
+    const mod = availableModules.find(m => m.id === moduleId)
+    if (mod?.required) return // Can't toggle required modules
     
     setData(prev => {
       if (prev.modules.includes(moduleId)) {
@@ -188,21 +188,21 @@ export default function OnboardingPage() {
       </div>
 
       <div className="grid gap-3">
-        {availableModules.map((module) => {
-          const Icon = MODULE_ICONS[module.icon] || Package
-          const isEnabled = data.modules.includes(module.id)
+        {availableModules.map((mod) => {
+          const Icon = MODULE_ICONS[mod.icon] || Package
+          const isEnabled = data.modules.includes(mod.id)
           
           return (
             <button
-              key={module.id}
+              key={mod.id}
               type="button"
-              onClick={() => toggleModule(module.id)}
-              disabled={module.required}
+              onClick={() => toggleModule(mod.id)}
+              disabled={mod.required}
               className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all text-left ${
                 isEnabled
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-slate-200 hover:border-slate-300'
-              } ${module.required ? 'opacity-70' : ''}`}
+              } ${mod.required ? 'opacity-70' : ''}`}
             >
               <div className={`p-2 rounded-lg ${isEnabled ? 'bg-blue-500 text-white' : 'bg-slate-200 text-slate-500'}`}>
                 <Icon className="w-5 h-5" />
@@ -210,13 +210,13 @@ export default function OnboardingPage() {
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className={`font-medium ${isEnabled ? 'text-blue-800' : 'text-slate-700'}`}>
-                    {module.name}
+                    {mod.name}
                   </span>
-                  {module.required && (
+                  {mod.required && (
                     <Badge variant="secondary" className="text-xs">Requerido</Badge>
                   )}
                 </div>
-                <p className="text-sm text-slate-500">{module.description}</p>
+                <p className="text-sm text-slate-500">{mod.description}</p>
               </div>
               {isEnabled && (
                 <Check className="w-5 h-5 text-blue-500" />

@@ -17,33 +17,17 @@ import {
   UserCheck,
   ShoppingCart,
   DollarSign,
-  MessageCircle,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
-import { useAuth } from './auth-provider'
-import { availableModules, themes, type ThemeName } from '@/lib/theme'
+import { themes, type ThemeName } from '@/lib/theme'
 
 interface NavItem {
   href: string
   label: string
   icon: React.ComponentType<{ className?: string }>
   moduleId?: string
-}
-
-const MODULE_ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  stock: Package,
-  invoices: FileText,
-  employees: Users,
-  shifts: CalendarDays,
-  holidays: CalendarRange,
-  calendar: UserCheck,
-  tasks: CheckSquare,
-  pos: ShoppingCart,
-  cash: DollarSign,
-  customers: UserCheck,
-  chat: MessageCircle,
 }
 
 const ALL_NAV_ITEMS: NavItem[] = [
@@ -63,7 +47,6 @@ const ALL_NAV_ITEMS: NavItem[] = [
 
 export function Sidebar() {
   const pathname = usePathname()
-  const { user } = useAuth()
   const [activeModules, setActiveModules] = useState<string[]>([])
   const [theme, setTheme] = useState<ThemeName>('modern')
   const [franchiseName, setFranchiseName] = useState('Mi Franquicia')
@@ -82,7 +65,7 @@ export function Sidebar() {
           setTheme(settings.theme || 'modern')
           setFranchiseName(data.name || 'Mi Franquicia')
         }
-      } catch (e) {
+      } catch {
         // Use defaults
         setActiveModules(['stock', 'invoices', 'employees', 'tasks', 'calendar', 'chat'])
       }
@@ -97,7 +80,7 @@ export function Sidebar() {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}` }
       })
-    } catch (e) {
+    } catch {
       // Ignore
     }
     localStorage.removeItem('token')
@@ -113,7 +96,6 @@ export function Sidebar() {
 
   const currentTheme = themes[theme]
   const primaryColor = currentTheme?.colors.primary || '#2563eb'
-  const primaryHover = currentTheme?.colors.primaryHover || '#1d4ed8'
   const textColor = currentTheme?.colors.text || '#1e293b'
   const textMuted = currentTheme?.colors.textMuted || '#64748b'
   const background = currentTheme?.colors.background || '#f8fafc'
