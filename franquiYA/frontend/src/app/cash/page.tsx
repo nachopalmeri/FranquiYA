@@ -12,7 +12,6 @@ import { Label } from '@/components/ui/label'
 import { 
   DollarSign, 
   TrendingUp, 
-  TrendingDown, 
   Plus, 
   Minus,
   Lock,
@@ -24,7 +23,7 @@ import {
   ArrowDownRight
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import type { CashRegister, CashMovement, TodaySummary } from '@/lib/types'
+import type { CashRegister, TodaySummary } from '@/lib/types'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -32,7 +31,6 @@ export default function CashPage() {
   const { user, loading: authLoading } = useAuth()
   const [cashRegister, setCashRegister] = useState<CashRegister | null>(null)
   const [summary, setSummary] = useState<TodaySummary | null>(null)
-  const [movements, setMovements] = useState<CashMovement[]>([])
   const [loading, setLoading] = useState(true)
   const [showOpenModal, setShowOpenModal] = useState(false)
   const [showCloseModal, setShowCloseModal] = useState(false)
