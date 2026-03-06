@@ -312,3 +312,56 @@ export interface ExternalEvent {
   is_recurring: boolean;
   created_at: string;
 }
+
+// === TPV / CASH TYPES ===
+
+export interface CartItem {
+  product: Product;
+  quantity: number;
+  unit_price: number;
+  total: number;
+}
+
+export interface CashRegister {
+  id: number;
+  opening_amount: number;
+  closing_amount?: number;
+  expected_amount?: number;
+  difference?: number;
+  opened_at: string;
+  closed_at?: string;
+  status: 'open' | 'closed';
+}
+
+export interface CashMovement {
+  id: number;
+  type: 'income' | 'expense' | 'withdrawal';
+  amount: number;
+  concept?: string;
+  payment_method: string;
+  created_at: string;
+}
+
+export interface Sale {
+  id: number;
+  customer_id?: number;
+  subtotal: number;
+  tax: number;
+  discount: number;
+  total: number;
+  payment_method: 'cash' | 'card' | 'transfer' | 'mercadopago';
+  status: string;
+  created_at: string;
+}
+
+export interface TodaySummary {
+  date: string;
+  total_sales: number;
+  total_amount: number;
+  by_payment_method: {
+    cash: number;
+    card: number;
+    transfer: number;
+    mercadopago: number;
+  };
+}
