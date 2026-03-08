@@ -1,11 +1,14 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Thermometer, Droplets, Wind } from 'lucide-react'
+import { Thermometer, Droplets, Wind, Palette, Check } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
 import type { WeatherData, WeatherInsight } from '@/lib/types'
 import { getWeatherInsight, getWeatherIcon } from '@/lib/utils'
+import { themes, type ThemeName } from '@/lib/theme'
+import { cn } from '@/lib/utils'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -13,6 +16,16 @@ export function Header() {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [loading, setLoading] = useState(true)
   const [insight, setInsight] = useState<WeatherInsight | null>(null)
+  const [showThemeMenu, setShowThemeMenu] = useState(false)
+  const [currentTheme, setCurrentTheme] = useState<ThemeName>('classic')
+
+  useEffect(() => {
+    // Load theme from localStorage
+    const saved = localStorage.getItem('theme') as ThemeName
+    if (saved && themes[saved]) {
+      setCurrentTheme(saved)
+    }
+  }, [])
 
   useEffect(() => {
     const fetchWeather = async () => {
@@ -38,6 +51,14 @@ export function Header() {
     fetchWeather()
   }, [])
 
+  const changeTheme = (theme: ThemeName) => {
+    setCurrentTheme(theme)
+    localStorage.setItem('theme', theme)
+    setShowThemeMenu(false)
+    // Apply theme by reloading or updating CSS
+    window.location.reload()
+  }
+
   return (
     <header className="sticky top-0 z-30 border-b border-[#E8DFD3] bg-white/80 backdrop-blur-sm">
       <div className="flex h-16 items-center justify-between px-6">
@@ -52,6 +73,39 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Theme Selector */}
+          <div className="relative">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowThemeMenu(!showThemeMenu)}
+              className="text-[#4A3728] hover:bg-[#E8DFD3]"
+            >
+              <Palette className="h-5 w-5" />
+            </Button>
+            
+            {showThemeMenu && (
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-xl border border-[#E8DFD3] bg-white shadow-lg p-2 z-50">
+                <p className="text-xs font-medium text-[#8B7355] px-2 py-1">Tema</p>
+                {(['modern', 'classic', 'vibrant'] as ThemeName[]).map(theme => (
+                  <button
+                    key={theme}
+                    onClick={() => changeTheme(theme)}
+                    className={cn(
+                      "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm",
+                      currentTheme === theme 
+                        ? "bg-[#E8DFD3] text-[#4A3728]" 
+                        : "text-[#4A3728] hover:bg-[#FEF3E2]"
+                    )}
+                  >
+                    <span className="capitalize">{theme}</span>
+                    {currentTheme === theme && <Check className="h-4 w-4" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           {loading ? (
             <div className="flex items-center gap-4">
               <Skeleton className="h-12 w-48 rounded-xl" />

@@ -10,8 +10,12 @@ import { ChatWidget } from '@/components/chat/chat-widget'
 import type { Product, ProductCategory } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 import { Button } from '@/components/ui/button'
-import { Download } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Download, Plus, X } from 'lucide-react'
 import * as XLSX from 'xlsx'
+import { cn } from '@/lib/utils'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
 
@@ -42,6 +46,16 @@ export default function StockPage() {
   const [stockFilter, setStockFilter] = useState<'all' | 'critical' | 'low' | 'ok'>('all')
   const [sortBy, setSortBy] = useState<'name' | 'stock' | 'price'>('name')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc')
+  const [showAddModal, setShowAddModal] = useState(false)
+  const [saving, setSaving] = useState(false)
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    category: 'sabor_7.8kg' as ProductCategory,
+    unit: 'unidad',
+    current_stock: 0,
+    min_stock: 5,
+    unit_price: 0
+  })
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -123,6 +137,45 @@ export default function StockPage() {
     XLSX.writeFile(wb, `grido-stock-${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
+  const handleAddProduct = async () => {
+    if (!newProduct.name.trim()) return
+    
+    setSaving(true)
+    try {
+      const token = localStorage.getItem('token')
+      const res = await fetch(`${API_URL}/products`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(newProduct)
+      })
+      
+      if (res.ok) {
+        const product = await res.json()
+        setProducts([...products, product])
+        setShowAddModal(false)
+        setNewProduct({
+          name: '',
+          category: 'sabor_7.8kg',
+          unit: 'unidad',
+          current_stock: 0,
+          min_stock: 5,
+          unit_price: 0
+        })
+      } else {
+        const err = await res.json()
+        alert(err.detail || 'Error al crear producto')
+      }
+    } catch (error) {
+      console.error('Failed to create product:', error)
+      alert('Error al crear producto')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   if (authLoading || loading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
@@ -142,14 +195,23 @@ export default function StockPage() {
               <h1 className="text-3xl font-bold text-white">Stock</h1>
               <p className="text-gray-400">{filteredProducts.length} productos</p>
             </div>
-            <Button 
-              onClick={exportToExcel} 
-              variant="outline"
-              className="border-white/10 text-white hover:bg-white/10"
-            >
-              <Download className="mr-2 h-4 w-4" />
-              Exportar Excel
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setShowAddModal(true)}
+                className="bg-[#E31D2B] hover:bg-[#C41925]"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Agregar Producto
+              </Button>
+              <Button 
+                onClick={exportToExcel} 
+                variant="outline"
+                className="border-white/10 text-white hover:bg-white/10"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Exportar Excel
+              </Button>
+            </div>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3">
@@ -176,6 +238,95 @@ export default function StockPage() {
         </div>
         <ChatWidget />
       </main>
+
+      {/* Add Product Modal */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <Card className="w-full max-w-md border-white/10 bg-[#1a1a1a]">
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="text-white">Agregar Producto</CardTitle>
+              <button onClick={() => setShowAddModal(false)}>
+                <X className="h-5 w-5 text-gray-400" />
+              </button>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-gray-300">Nombre *</Label>
+                <Input
+                  value={newProduct.name}
+                  onChange={(e) => setNewProduct({ ...newProduct, name: e.target.value })}
+                  placeholder="Ej: Vainilla"
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="text-gray-300">Categoría</Label>
+                <select
+                  value={newProduct.category}
+                  onChange={(e) => setNewProduct({ ...newProduct, category: e.target.value as ProductCategory })}
+                  className="w-full bg-white/5 border border-white/10 text-white rounded-lg px-3 py-2"
+                >
+                  {CATEGORY_OPTIONS.filter(c => c.value !== 'all').map(cat => (
+                    <option key={cat.value} value={cat.value} className="bg-[#1a1a1a]">
+                      {cat.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-300">Unidad</Label>
+                <Input
+                  value={newProduct.unit}
+                  onChange={(e) => setNewProduct({ ...newProduct, unit: e.target.value })}
+                  placeholder="Ej: kg, unidad, caja"
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Stock Inicial</Label>
+                  <Input
+                    type="number"
+                    value={newProduct.current_stock}
+                    onChange={(e) => setNewProduct({ ...newProduct, current_stock: parseFloat(e.target.value) || 0 })}
+                    className="bg-white/5 border-white/10 text-white"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-gray-300">Stock Mínimo</Label>
+                  <Input
+                    type="number"
+                    value={newProduct.min_stock}
+                    onChange={(e) => setNewProduct({ ...newProduct, min_stock: parseFloat(e.target.value) || 0 })}
+                    className="bg-white/5 border-white/10 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-gray-300">Precio Unitario ($)</Label>
+                <Input
+                  type="number"
+                  value={newProduct.unit_price}
+                  onChange={(e) => setNewProduct({ ...newProduct, unit_price: parseFloat(e.target.value) || 0 })}
+                  className="bg-white/5 border-white/10 text-white"
+                />
+              </div>
+
+              <Button
+                onClick={handleAddProduct}
+                disabled={saving || !newProduct.name.trim()}
+                className="w-full bg-[#E31D2B] hover:bg-[#C41925]"
+              >
+                {saving ? 'Guardando...' : 'Agregar Producto'}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   )
 }

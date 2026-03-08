@@ -3,8 +3,14 @@ import "./globals.css";
 import { AuthProvider } from "@/components/layout/auth-provider";
 
 export const metadata: Metadata = {
-  title: "Grido Smart Ops - Sistema de Gestión",
-  description: "Sistema de gestión integral para franquicias Grido",
+  title: "FranquiYA - Sistema de Gestión",
+  description: "Sistema de gestión integral para franquicias",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "FranquiYA",
+  },
 };
 
 export default function RootLayout({
