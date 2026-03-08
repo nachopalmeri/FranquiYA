@@ -11,6 +11,7 @@ from database import get_db
 from models.user import User
 from models.product import Product
 from models.invoice import Invoice, InvoiceLine
+from models.franchise import Franchise
 from schemas import Invoice as InvoiceSchema, ApproveLineRequest
 from auth import get_current_active_user, get_admin_user, check_permission
 
@@ -506,7 +507,7 @@ async def upload_invoice(
         supplier="Helacor S.A.",
         total=parsed["total"],
         raw_text=parsed["raw_text"],
-        franchise_id=franchise_id,
+        franchise_id=target_franchise_id,
         status="pending"
     )
     db.add(invoice)

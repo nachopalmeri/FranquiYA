@@ -86,11 +86,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
-origins = os.getenv("CORS_ORIGINS", "*").split(",")
-if origins == ["*"]:
-    allow_origins = ["*"]
+# CORS - explicit origins (not wildcard for production)
+_env_cors = os.getenv("CORS_ORIGINS", "")
+if _env_cors:
+    allow_origins = [o.strip() for o in _env_cors.split(",") if o.strip()]
 else:
-    allow_origins = origins
+    # Default safe origins for development
+    allow_origins = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ]
 
 app.add_middleware(
     CORSMiddleware,

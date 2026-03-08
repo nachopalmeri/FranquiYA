@@ -3,13 +3,14 @@ from typing import Optional, List, Any
 from functools import wraps
 from jose import JWTError, jwt
 import bcrypt
+import os
 from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
 
-SECRET_KEY = "grido-smart-ops-secret-key-2026-change-in-production"
+SECRET_KEY = os.getenv("JWT_SECRET", "grido-smart-ops-secret-key-2026-dev-only")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
