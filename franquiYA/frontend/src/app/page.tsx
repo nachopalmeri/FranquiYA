@@ -75,35 +75,35 @@ export default function DashboardPage() {
 
   if (authLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#FFF8F0]">
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0a]">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#E31D2B] border-t-transparent" />
       </div>
     )
   }
 
   return (
-    <div className="flex min-h-screen bg-[#FFF8F0]">
+    <div className="flex min-h-screen bg-[#0a0a0a]">
       <Sidebar />
       <main className="flex-1 ml-64">
         <Header />
         <div className="p-6 space-y-6">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-[#4A3728] font-heading mb-1">
+            <h1 className="text-3xl font-bold text-white font-heading mb-1">
               Dashboard
             </h1>
-            <p className="text-[#8B7355]">Bienvenido, {user?.name}</p>
+            <p className="text-gray-400">Bienvenido, {user?.name}</p>
           </div>
 
           <KPICards stats={stats} loading={loading} />
 
           <div className="mb-4 flex flex-wrap items-center gap-3">
             <div className="relative flex-1 min-w-[200px] max-w-md">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B7355]" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <Input
                 placeholder="Buscar productos en alerta..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="border-[#E8DFD3] bg-white pl-10 text-[#4A3728] placeholder:text-[#8B7355] focus:border-[#E31D2B]/50"
+                className="border-white/10 bg-white/5 pl-10 text-white placeholder:text-gray-500 focus:border-[#E31D2B]/50"
               />
             </div>
             
@@ -124,7 +124,7 @@ export default function DashboardPage() {
                         : btn.value === 'low'
                           ? 'bg-amber-500 hover:bg-amber-600 text-white'
                           : 'bg-[#E31D2B] hover:bg-[#C41925] text-white'
-                      : 'border-[#E8DFD3] text-[#4A3728] hover:text-[#E31D2B] hover:border-[#E31D2B]'
+                      : 'border-white/10 text-white hover:bg-white/10 hover:border-white/20'
                   }
                 >
                   {btn.label}
@@ -136,83 +136,83 @@ export default function DashboardPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <StockAlerts alerts={filteredAlerts} loading={loading} />
             
-            <Card className="border-[#E8DFD3] bg-white shadow-sm">
+            <Card className="border-white/10 bg-white/5">
               <CardContent className="p-6">
-                <h3 className="mb-4 font-semibold text-[#4A3728] flex items-center gap-2">
+                <h3 className="mb-4 font-semibold text-white flex items-center gap-2">
                   <TrendingUp className="h-5 w-5 text-[#E31D2B]" />
                   Acciones Rápidas
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   <a
                     href="/invoices"
-                    className="group flex items-center gap-3 rounded-xl border border-[#E8DFD3] bg-[#FFF8F0] p-4 transition-all duration-200 hover:border-[#E31D2B] hover:shadow-md"
+                    className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
                   >
-                    <div className="rounded-lg bg-purple-100 p-2 transition-transform duration-200 group-hover:scale-110">
-                      <FileText className="h-5 w-5 text-purple-600" />
+                    <div className="rounded-lg bg-purple-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                      <FileText className="h-5 w-5 text-purple-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#4A3728] group-hover:text-[#E31D2B]">Cargar Factura</p>
-                      <p className="text-sm text-[#8B7355]">Procesar PDF de Helacor</p>
+                      <p className="font-medium text-white group-hover:text-[#E31D2B]">Cargar Factura</p>
+                      <p className="text-sm text-gray-400">Procesar PDF de Helacor</p>
                     </div>
                   </a>
                   <a
                     href="/audit"
-                    className="group flex items-center gap-3 rounded-xl border border-[#E8DFD3] bg-[#FFF8F0] p-4 transition-all duration-200 hover:border-[#E31D2B] hover:shadow-md"
+                    className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
                   >
-                    <div className="rounded-lg bg-blue-100 p-2 transition-transform duration-200 group-hover:scale-110">
-                      <Smartphone className="h-5 w-5 text-blue-600" />
+                    <div className="rounded-lg bg-blue-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                      <Smartphone className="h-5 w-5 text-blue-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#4A3728] group-hover:text-[#E31D2B]">Iniciar Auditoría</p>
-                      <p className="text-sm text-[#8B7355]">Contar stock en cámara</p>
+                      <p className="font-medium text-white group-hover:text-[#E31D2B]">Iniciar Auditoría</p>
+                      <p className="text-sm text-gray-400">Contar stock en cámara</p>
                     </div>
                   </a>
                   <a
                     href="/employees"
-                    className="group flex items-center gap-3 rounded-xl border border-[#E8DFD3] bg-[#FFF8F0] p-4 transition-all duration-200 hover:border-[#E31D2B] hover:shadow-md"
+                    className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
                   >
-                    <div className="rounded-lg bg-emerald-100 p-2 transition-transform duration-200 group-hover:scale-110">
-                      <Users className="h-5 w-5 text-emerald-600" />
+                    <div className="rounded-lg bg-emerald-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                      <Users className="h-5 w-5 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#4A3728] group-hover:text-[#E31D2B]">Empleados</p>
-                      <p className="text-sm text-[#8B7355]">Gestionar equipo</p>
+                      <p className="font-medium text-white group-hover:text-[#E31D2B]">Empleados</p>
+                      <p className="text-sm text-gray-400">Gestionar equipo</p>
                     </div>
                   </a>
                   <a
                     href="/stock"
-                    className="group flex items-center gap-3 rounded-xl border border-[#E8DFD3] bg-[#FFF8F0] p-4 transition-all duration-200 hover:border-[#E31D2B] hover:shadow-md"
+                    className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
                   >
-                    <div className="rounded-lg bg-amber-100 p-2 transition-transform duration-200 group-hover:scale-110">
-                      <BarChart3 className="h-5 w-5 text-amber-600" />
+                    <div className="rounded-lg bg-amber-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                      <BarChart3 className="h-5 w-5 text-amber-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#4A3728] group-hover:text-[#E31D2B]">Ver Stock</p>
-                      <p className="text-sm text-[#8B7355]">Lista completa</p>
+                      <p className="font-medium text-white group-hover:text-[#E31D2B]">Ver Stock</p>
+                      <p className="text-sm text-gray-400">Lista completa</p>
                     </div>
                   </a>
                   <a
                     href="/shifts"
-                    className="group flex items-center gap-3 rounded-xl border border-[#E8DFD3] bg-[#FFF8F0] p-4 transition-all duration-200 hover:border-[#E31D2B] hover:shadow-md"
+                    className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
                   >
-                    <div className="rounded-lg bg-rose-100 p-2 transition-transform duration-200 group-hover:scale-110">
-                      <Clock className="h-5 w-5 text-rose-600" />
+                    <div className="rounded-lg bg-rose-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                      <Clock className="h-5 w-5 text-rose-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#4A3728] group-hover:text-[#E31D2B]">Turnos</p>
-                      <p className="text-sm text-[#8B7355]">Horario semanal</p>
+                      <p className="font-medium text-white group-hover:text-[#E31D2B]">Turnos</p>
+                      <p className="text-sm text-gray-400">Horario semanal</p>
                     </div>
                   </a>
                   <a
                     href="/calendar"
-                    className="group flex items-center gap-3 rounded-xl border border-[#E8DFD3] bg-[#FFF8F0] p-4 transition-all duration-200 hover:border-[#E31D2B] hover:shadow-md"
+                    className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
                   >
-                    <div className="rounded-lg bg-cyan-100 p-2 transition-transform duration-200 group-hover:scale-110">
-                      <Calendar className="h-5 w-5 text-cyan-600" />
+                    <div className="rounded-lg bg-cyan-500/20 p-2 transition-transform duration-200 group-hover:scale-110">
+                      <Calendar className="h-5 w-5 text-cyan-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-[#4A3728] group-hover:text-[#E31D2B]">Calendario</p>
-                      <p className="text-sm text-[#8B7355]">Eventos externos</p>
+                      <p className="font-medium text-white group-hover:text-[#E31D2B]">Calendario</p>
+                      <p className="text-sm text-gray-400">Eventos externos</p>
                     </div>
                   </a>
                 </div>
