@@ -1,19 +1,14 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react'
+import { MessageCircle, X, Send, Loader2, Sparkles, Bot, User as UserIcon, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 import { useAuth } from '@/components/layout/auth-provider'
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
-}
-
-interface QuickAction {
-  label: string
-  query: string
+  streaming?: boolean
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
@@ -24,51 +19,35 @@ export function ChatWidget() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [quickActions, setQuickActions] = useState<QuickAction[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    fetchQuickActions()
-  }, [])
+  const inputRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
     if (isOpen && messages.length === 0 && user?.franchise_name) {
       setMessages([
-        { role: 'assistant', content: `¡Hola! Soy el asistente de ${user.franchise_name}. ¿En qué puedo ayudarte?` }
+        { 
+          role: 'assistant', 
+          content: `¡Hola! 👋 Soy el asistente de ${user.franchise_name}. ¿En qué puedo ayudarte hoy?\n\nPuedo darte información sobre:\n• Stock de productos\n• Productos críticos o con stock bajo\n• Resumen de tu negocio\n• Facturas recientes` 
+        }
       ])
     }
   }, [isOpen, user?.franchise_name, messages.length])
 
   useEffect(() => {
-    scrollToBottom()
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }
+  const sendMessage = async (messageText?: string) => {
+    const text = messageText?.trim() || input.trim()
+    if (!text || loading) return
 
-  const fetchQuickActions = async () => {
-    try {
-      const token = localStorage.getItem('token')
-      const res = await fetch(`${API_URL}/chat/quick-actions`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      if (res.ok) {
-        const data = await res.json()
-        setQuickActions(data.actions || [])
-      }
-    } catch {
-      console.error('Failed to fetch quick actions')
-    }
-  }
-
-  const sendMessage = async (messageText: string = input) => {
-    if (!messageText.trim() || loading) return
-
-    const userMessage = messageText.trim()
+    // Add user message
+    setMessages(prev => [...prev, { role: 'user', content: text }])
     setInput('')
-    setMessages(prev => [...prev, { role: 'user', content: userMessage }])
     setLoading(true)
+
+    // Add empty assistant message for streaming
+    setMessages(prev => [...prev, { role: 'assistant', content: '', streaming: true }])
 
     try {
       const token = localStorage.getItem('token')
@@ -78,23 +57,44 @@ export function ChatWidget() {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify({ message: userMessage })
+        body: JSON.stringify({ message: text })
       })
 
       if (res.ok) {
         const data = await res.json()
-        setMessages(prev => [...prev, { role: 'assistant', content: data.response }])
+        
+        // Update the last message with full response
+        setMessages(prev => {
+          const newMessages = [...prev]
+          newMessages[newMessages.length - 1] = {
+            role: 'assistant',
+            content: data.response,
+            streaming: false
+          }
+          return newMessages
+        })
       } else {
-        setMessages(prev => [...prev, { 
-          role: 'assistant', 
-          content: 'Error al procesar tu mensaje. Intentá de nuevo.' 
-        }])
+        // Error response
+        setMessages(prev => {
+          const newMessages = [...prev]
+          newMessages[newMessages.length - 1] = {
+            role: 'assistant',
+            content: 'Disculpa, tuve un problema al procesar tu mensaje. ¿Podrías intentarlo de nuevo?',
+            streaming: false
+          }
+          return newMessages
+        })
       }
     } catch {
-      setMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: 'Error de conexión. Verificá tu conexión a internet.' 
-      }])
+      setMessages(prev => {
+        const newMessages = [...prev]
+        newMessages[newMessages.length - 1] = {
+          role: 'assistant',
+          content: 'Error de conexión. Verificá tu internet e intentá de nuevo.',
+          streaming: false
+        }
+        return newMessages
+      })
     } finally {
       setLoading(false)
     }
@@ -107,47 +107,46 @@ export function ChatWidget() {
     }
   }
 
+  // Quick actions
+  const quickActions = [
+    "¿Qué productos están críticos?",
+    "¿Qué debo pedir a Helacor?",
+    "Resumen del stock",
+    "Últimas facturas"
+  ]
+
   return (
     <>
-      {/* Floating Button */}
+      {/* Floating Button - Vercel style */}
       <button
         onClick={() => setIsOpen(true)}
-        className={cn(
-          "fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full",
-          "bg-gradient-to-r from-[#E31D2B] to-[#ff4757] text-white shadow-lg shadow-[#E31D2B]/30",
-          "hover:scale-110 transition-all duration-200",
-          isOpen && "hidden"
-        )}
+        className="fixed bottom-6 right-6 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#E31D2B] text-white shadow-lg shadow-red-500/25 hover:bg-[#C41925] hover:scale-105 transition-all duration-200"
       >
-        <MessageCircle className="h-6 w-6" />
+        {isOpen ? <X className="h-6 w-6" /> : <MessageCircle className="h-6 w-6" />}
       </button>
 
-      {/* Chat Window */}
+      {/* Chat Window - Vercel AI style */}
       {isOpen && (
-        <div className={cn(
-          "fixed bottom-6 right-6 z-50 flex flex-col",
-          "w-[380px] h-[550px] max-h-[80vh]",
-          "bg-[#1a1a1a] border border-white/10 rounded-2xl shadow-2xl",
-          "overflow-hidden"
-        )}>
+        <div className="fixed bottom-24 right-6 z-50 w-[380px] h-[600px] max-h-[80vh] bg-[#171717] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+          
           {/* Header */}
-          <div className="flex items-center justify-between p-4 border-b border-white/10 bg-[#0a0a0a]">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#1f1f1f]">
             <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-[#E31D2B] to-[#ff4757]">
-                <Sparkles className="h-5 w-5 text-white" />
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#E31D2B]">
+                <Sparkles className="h-4 w-4 text-white" />
               </div>
               <div>
-                <h3 className="font-semibold text-white">Asistente Grido</h3>
-                <p className="text-xs text-gray-400">Powered by Gemini AI</p>
+                <h3 className="font-semibold text-white text-sm">Asistente IA</h3>
+                <p className="text-xs text-gray-400">Tu ayuda inteligente</p>
               </div>
             </div>
             <Button
               variant="ghost"
               size="icon"
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-white"
+              className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/10"
             >
-              <X className="h-5 w-5" />
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </div>
 
@@ -156,44 +155,53 @@ export function ChatWidget() {
             {messages.map((msg, idx) => (
               <div
                 key={idx}
-                className={cn(
-                  "flex",
-                  msg.role === 'user' ? 'justify-end' : 'justify-start'
-                )}
+                className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={cn(
-                  "max-w-[85%] rounded-2xl px-4 py-3",
-                  msg.role === 'user' 
-                    ? "bg-[#E31D2B] text-white rounded-br-md" 
-                    : "bg-white/5 text-gray-200 rounded-bl-md border border-white/5"
-                )}>
-                  <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                <div className={`flex gap-2 max-w-[85%] ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                  {/* Avatar */}
+                  <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${
+                    msg.role === 'user' ? 'bg-[#E31D2B]' : 'bg-[#2a2a2a]'
+                  }`}>
+                    {msg.role === 'user' ? (
+                      <UserIcon className="h-3 w-3 text-white" />
+                    ) : (
+                      <Bot className="h-3 w-3 text-white" />
+                    )}
+                  </div>
+                  
+                  {/* Content */}
+                  <div className={`rounded-2xl px-4 py-2.5 text-sm ${
+                    msg.role === 'user' 
+                      ? 'bg-[#E31D2B] text-white rounded-br-md' 
+                      : 'bg-[#2a2a2a] text-gray-100 rounded-bl-md'
+                  }`}>
+                    {msg.streaming && msg.content === '' ? (
+                      <div className="flex gap-1">
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
-            
-            {loading && (
-              <div className="flex justify-start">
-                <div className="bg-white/5 border border-white/5 rounded-2xl rounded-bl-md px-4 py-3">
-                  <Loader2 className="h-4 w-4 animate-spin text-[#E31D2B]" />
-                </div>
-              </div>
-            )}
-            
             <div ref={messagesEndRef} />
           </div>
 
           {/* Quick Actions */}
-          {messages.length <= 2 && quickActions.length > 0 && (
+          {messages.length <= 2 && !loading && (
             <div className="px-4 pb-2">
               <div className="flex flex-wrap gap-2">
-                {quickActions.slice(0, 3).map((action, idx) => (
+                {quickActions.map((action, idx) => (
                   <button
                     key={idx}
-                    onClick={() => sendMessage(action.query)}
-                    className="text-xs px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-gray-300 hover:bg-white/10 hover:text-white transition-colors"
+                    onClick={() => sendMessage(action)}
+                    className="text-xs px-3 py-1.5 rounded-full bg-[#2a2a2a] border border-white/10 text-gray-300 hover:bg-[#3a3a3a] hover:border-white/20 transition-colors"
                   >
-                    {action.label}
+                    {action}
                   </button>
                 ))}
               </div>
@@ -201,25 +209,33 @@ export function ChatWidget() {
           )}
 
           {/* Input */}
-          <div className="p-4 border-t border-white/10">
-            <div className="flex gap-2">
-              <input
-                type="text"
+          <div className="p-4 border-t border-white/10 bg-[#1f1f1f]">
+            <div className="flex gap-2 items-end">
+              <textarea
+                ref={inputRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyPress}
                 placeholder="Escribí tu consulta..."
-                className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#E31D2B]/50"
+                rows={1}
+                className="flex-1 bg-[#2a2a2a] border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white placeholder:text-gray-500 focus:outline-none focus:border-[#E31D2B]/50 resize-none min-h-[44px] max-h-[120px]"
                 disabled={loading}
               />
               <Button
                 onClick={() => sendMessage()}
                 disabled={loading || !input.trim()}
-                className="bg-[#E31D2B] hover:bg-[#C41925] px-4"
+                className="h-11 w-11 p-0 bg-[#E31D2B] hover:bg-[#C41925] disabled:bg-[#2a2a2a]"
               >
-                <Send className="h-4 w-4" />
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </Button>
             </div>
+            <p className="text-xs text-gray-500 mt-2 text-center">
+              IA puede cometer errores. Verificá información importante.
+            </p>
           </div>
         </div>
       )}
