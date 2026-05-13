@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
 
-SECRET_KEY = os.getenv("JWT_SECRET", "grido-smart-ops-secret-key-2026-dev-only")
+SECRET_KEY = os.getenv("JWT_SECRET", "franquiya-local-dev-secret-change-me")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 

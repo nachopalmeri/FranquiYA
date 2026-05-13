@@ -43,8 +43,8 @@ from routers import (
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
-    title="Grido Smart Ops API",
-    description="Sistema de gestión integral para franquicias Grido",
+    title="FranquiYA API",
+    description="Sistema de gestión integral para operaciones de franquicia",
     version="1.0.0"
 )
 
@@ -131,7 +131,7 @@ app.include_router(pay_router, prefix="/api")
 def read_root():
     return {
         "status": "Sistema Operativo",
-        "franchise": "Grido Smart Ops",
+        "franchise": "FranquiYA",
         "version": "1.0.0"
     }
 

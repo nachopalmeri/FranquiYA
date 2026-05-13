@@ -117,52 +117,52 @@ PRODUCTS_DATA = [
 
 def seed_database(db):
     # ============================================
-    # FRANQUICIA 1: Fernando Palmeri - LISTA
+    # FRANQUICIA 1: Demo Store - LISTA
     # ============================================
-    franchise_fernando = db.query(Franchise).filter(Franchise.code == "101535").first()
+    franchise_demo = db.query(Franchise).filter(Franchise.code == "DEMO-001").first()
     
-    if not franchise_fernando:
-        franchise_fernando = Franchise(
-            code="101535",
-            name="Grido Lanús",
-            owner="Fernando Palmeri",
-            cuit="20-2306063-67",
-            address="9 de Julio 1720",
-            city="Lanús",
+    if not franchise_demo:
+        franchise_demo = Franchise(
+            code="DEMO-001",
+            name="Demo Franchise",
+            owner="Demo Owner",
+            cuit="00-00000000-0",
+            address="Demo Street 123",
+            city="Buenos Aires",
             province="Buenos Aires",
-            weather_city="Lanus,AR",
-            supplier="Helacor S.A."
+            weather_city="Buenos Aires,AR",
+            supplier="Demo Supplier"
         )
-        db.add(franchise_fernando)
+        db.add(franchise_demo)
         db.flush()
-        print("Franchise Fernando created")
+        print("Demo franchise created")
     
-    # Usuario Fernando - Todo configurado
-    fernando_user = db.query(User).filter(User.email == "fernando@gmail.com").first()
-    if fernando_user:
-        fernando_user.hashed_password = get_password_hash("lulita")
-        fernando_user.user_type = "franquiciado"
-        print("Fernando password updated")
+    # Usuario Demo - Todo configurado
+    demo_user = db.query(User).filter(User.email == "demo.admin@example.com").first()
+    if demo_user:
+        demo_user.hashed_password = get_password_hash("demo-admin-password")
+        demo_user.user_type = "franquiciado"
+        print("Demo admin password updated")
     else:
-        fernando_user = User(
-            email="fernando@gmail.com",
-            name="Fernando Palmeri",
-            hashed_password=get_password_hash("lulita"),
+        demo_user = User(
+            email="demo.admin@example.com",
+            name="Demo Admin",
+            hashed_password=get_password_hash("demo-admin-password"),
             role="admin",
             user_type="franquiciado",
-            franchise_id=franchise_fernando.id,
+            franchise_id=franchise_demo.id,
             is_active=True,
             requires_setup=False,
             completed_tour=True
         )
-        db.add(fernando_user)
-        print("Fernando user created")
+        db.add(demo_user)
+        print("Demo admin user created")
     
     db.flush()
     
-    # Crear rol "Vendedor" para Fernando
+    # Crear rol "Vendedor" para Demo
     role_vendedor = db.query(Role).filter(
-        Role.franchise_id == franchise_fernando.id,
+        Role.franchise_id == franchise_demo.id,
         Role.name == "Vendedor"
     ).first()
     
@@ -170,31 +170,31 @@ def seed_database(db):
         role_vendedor = Role(
             name="Vendedor",
             color="#22C55E",  # Green
-            franchise_id=franchise_fernando.id
+            franchise_id=franchise_demo.id
         )
         db.add(role_vendedor)
         db.flush()
         print("Vendedor role created")
     
-    # Crear empleado para Fernando (él mismo)
-    employee_fernando = db.query(Employee).filter(
-        Employee.franchise_id == franchise_fernando.id,
-        Employee.name == "Fernando Palmeri"
+    # Crear empleado para Demo
+    employee_demo = db.query(Employee).filter(
+        Employee.franchise_id == franchise_demo.id,
+        Employee.name == "Demo Employee"
     ).first()
     
-    if not employee_fernando:
-        employee_fernando = Employee(
-            name="Fernando Palmeri",
+    if not employee_demo:
+        employee_demo = Employee(
+            name="Demo Admin",
             role_id=role_vendedor.id,
             phone="",
-            franchise_id=franchise_fernando.id,
-            user_id=fernando_user.id
+            franchise_id=franchise_demo.id,
+            user_id=demo_user.id
         )
-        db.add(employee_fernando)
-        print("Fernando employee created")
+        db.add(employee_demo)
+        print("Demo employee created")
     
-    # Productos para Fernando
-    existing_products = db.query(Product).filter(Product.franchise_id == franchise_fernando.id).count()
+    # Productos para Demo
+    existing_products = db.query(Product).filter(Product.franchise_id == franchise_demo.id).count()
     if existing_products == 0:
         for name, category, unit, stock, min_stock, price in PRODUCTS_DATA:
             product = Product(
@@ -204,11 +204,11 @@ def seed_database(db):
                 current_stock=stock,
                 min_stock=min_stock,
                 unit_price=price,
-                franchise_id=franchise_fernando.id,
+                franchise_id=franchise_demo.id,
                 is_active=True
             )
             db.add(product)
-        print(f"Seeded {len(PRODUCTS_DATA)} products for Fernando")
+        print(f"Seeded {len(PRODUCTS_DATA)} products for demo franchise")
     
     # ============================================
     # FRANQUICIA 2: Admin Nueva - VACÍA
@@ -234,14 +234,14 @@ def seed_database(db):
     # ============================================
     # SUPERADMIN: Acceso a todas las franquicias
     # ============================================
-    superadmin = db.query(User).filter(User.email == "superadmin@grido.com").first()
+    superadmin = db.query(User).filter(User.email == "superadmin@example.com").first()
     if superadmin:
         superadmin.hashed_password = get_password_hash("superadmin123")
         superadmin.role = "superadmin"
         print("Superadmin password updated")
     else:
         superadmin = User(
-            email="superadmin@grido.com",
+            email="superadmin@example.com",
             name="Super Admin",
             hashed_password=get_password_hash("superadmin123"),
             role="superadmin",
@@ -255,14 +255,14 @@ def seed_database(db):
         print("Superadmin user created")
     
     # Usuario Admin - Requiere setup
-    admin_user = db.query(User).filter(User.email == "admin@grido.com").first()
+    admin_user = db.query(User).filter(User.email == "admin@example.com").first()
     if admin_user:
         admin_user.hashed_password = get_password_hash("admin123")
         admin_user.user_type = "franquiciado"
         print("Admin password updated")
     else:
         admin_user = User(
-            email="admin@grido.com",
+            email="admin@example.com",
             name="",
             hashed_password=get_password_hash("admin123"),
             role="admin",
@@ -276,21 +276,21 @@ def seed_database(db):
         print("Admin user created (requires setup)")
     
     # ============================================
-    # OPERADOR: Usuario limitado (trabaja para Fernando)
+    # OPERADOR: Usuario limitado (trabaja para Demo)
     # ============================================
-    operator_user = db.query(User).filter(User.email == "operator@grido.com").first()
+    operator_user = db.query(User).filter(User.email == "operator@example.com").first()
     if operator_user:
         operator_user.hashed_password = get_password_hash("operator123")
         operator_user.user_type = "empleado"
         print("Operator password updated")
     else:
         operator_user = User(
-            email="operator@grido.com",
+            email="operator@example.com",
             name="Operador",
             hashed_password=get_password_hash("operator123"),
             role="operator",
             user_type="empleado",
-            franchise_id=franchise_fernando.id,
+            franchise_id=franchise_demo.id,
             is_active=True,
             requires_setup=False,
             completed_tour=True

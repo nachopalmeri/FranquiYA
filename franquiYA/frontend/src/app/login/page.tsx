@@ -38,7 +38,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-[#E31D2B] shadow-lg shadow-[#E31D2B]/20">
             <IceCreamBowl className="h-10 w-10 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-[#4A3728] font-heading">Grido Smart Ops</CardTitle>
+          <CardTitle className="text-2xl font-bold text-[#4A3728] font-heading">FranquiYA</CardTitle>
           <CardDescription className="text-[#8B7355]">
             Ingresa a tu cuenta para continuar
           </CardDescription>
@@ -112,7 +112,7 @@ export default function LoginPage() {
 
           <div className="mt-6 rounded-xl bg-[#F5E6D3] border border-[#E8DFD3] p-4">
             <p className="text-center text-sm text-[#8B7355]">
-              Demo: <span className="font-mono font-semibold text-[#4A3728]">admin@grido.com</span> / <span className="font-mono font-semibold text-[#4A3728]">admin123</span>
+              Demo: <span className="font-mono font-semibold text-[#4A3728]">admin@example.com</span> / <span className="font-mono font-semibold text-[#4A3728]">admin123</span>
             </p>
           </div>
 

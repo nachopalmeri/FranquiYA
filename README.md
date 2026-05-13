@@ -53,7 +53,7 @@ FranquiYA/
 │       ├── src/lib/
 │       ├── __tests__/
 │       └── package.json
-└── project reference files
+└── .gitignore
 ```
 
 ## Local development

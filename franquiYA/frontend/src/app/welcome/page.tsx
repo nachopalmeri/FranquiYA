@@ -73,7 +73,7 @@ export default function WelcomePage() {
               <Sparkles className="h-10 w-10 text-white" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">
-              ¡Bienvenido a Grido Smart Ops!
+              ¡Bienvenido a FranquiYA!
             </h1>
             <p className="text-gray-400">
               Tu sistema de gestión integral para franquicias
