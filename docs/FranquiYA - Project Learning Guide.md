@@ -101,7 +101,8 @@ This review is based on the earlier inspection of local portfolio video files; i
 ## Evidence and limits
 
 - Code and test results come from the public [FranquiYA repository](https://github.com/nachopalmeri/FranquiYA).
-- The demo frontend and API are deployed together on Vercel at [franqui-ya.vercel.app](https://franqui-ya.vercel.app); the verified deployment ran commit `675973f`. The new same-origin server route has built and passed local HTTP smoke checks; its deployment is pending.
+- The demo frontend and API are deployed together on Vercel at [franqui-ya.vercel.app](https://franqui-ya.vercel.app); the verified deployment ran commit `ed94eb5`.
+- Live API smoke check: demo login succeeded; `/api/stock` returned six fictional products; `/api/dashboard/stats` returned 6 products, 2 low, 2 critical and 0 pending invoices; a stock write returned **403**.
 - The repository includes an optional Render Blueprint for the separate full Python API. It is not required by the hosted synthetic-data demo.
 - No real customer, staff usage, financial result, performance result, or production reliability has been established.
 - Other API domains are not yet hexagonal and are not enabled in the demo navigation.
