@@ -23,16 +23,21 @@ The in-memory demo catalog has six generic sample items. At the time of verifica
 
 ```mermaid
 flowchart LR
-  UI[Next.js dashboard and stock pages] --> HTTP[FastAPI stock router]
-  HTTP --> APP[InventoryService]
-  APP --> DOMAIN[InventoryProduct and stock rules]
-  APP --> PORT[ProductRepository protocol]
-  PORT --> SQL[SqlAlchemyProductRepository]
-  PORT --> DEMO[DemoInventoryRepository]
+  UI[Next.js dashboard and stock pages] --> HTTP[Next.js /api server route]
+  HTTP --> APP[TypeScript InventoryService]
+  APP --> DOMAIN[Stock thresholds]
+  APP --> PORT[ProductRepository interface]
+  PORT --> DEMO[In-memory sample adapter]
+  LOCAL[Python FastAPI adapter] --> PYAPP[Python InventoryService]
+  PYAPP --> PYPORT[Python ProductRepository protocol]
+  PYPORT --> SQL[SqlAlchemyProductRepository]
+  PYPORT --> PYDEMO[Python demo adapter]
 ```
 
 | Hexagonal role | Code | Responsibility |
 |---|---|---|
+| Hosted demo domain, application and repository port | `frontend/src/server/demo-inventory.ts` | Applies stock thresholds and reads fictional sample products through a repository interface |
+| Hosted HTTP adapter | `frontend/src/app/api/[...path]/route.ts` | Serves the demo login, stock, alerts and dashboard endpoints on the Vercel host |
 | Domain | `backend/domain/inventory.py` | Product value and critical/low/healthy thresholds |
 | Application | `backend/application/inventory_service.py` | List, fetch, update and alert use cases |
 | Outbound port | `backend/application/ports.py` | Repository contract used by the service |
@@ -41,7 +46,7 @@ flowchart LR
 | Inbound adapter | `backend/routers/stock.py` | Keeps the existing `/api/stock` HTTP contract |
 | Composition | `backend/adapters/inbound/fastapi_dependencies.py` | Selects SQL for normal users and sample memory data for the demo identity |
 
-The demo identity is created only when `DEMO_MODE_ENABLED=true`. A signed claim identifies it; API middleware rejects every write method for that claim. Production startup also requires `JWT_SECRET` and skips development seed records. The hexagonal boundary currently covers inventory; the other API areas keep their earlier persistence pattern.
+The hosted demo route issues a time-limited demo marker and rejects every write method. The marker is not a private credential: all hosted demo values are fictional and public. The local Python API has a signed demo claim, rejects write requests for that identity, requires `JWT_SECRET` in production, and skips development seed records. Both implementations currently cover inventory; other API areas keep their earlier persistence pattern.
 
 ## Product and UX choices
 
@@ -53,7 +58,7 @@ The demo identity is created only when `DEMO_MODE_ENABLED=true`. A signed claim 
 
 ## Run it locally
 
-Backend terminal:
+The hosted demo API and frontend run together. For the Python API implementation, use a separate terminal:
 
 ```powershell
 cd franquiYA/backend
@@ -64,7 +69,7 @@ $env:DEMO_MODE_ENABLED = 'true'
 .venv\Scripts\uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Frontend terminal:
+Start the frontend:
 
 ```powershell
 cd franquiYA/frontend
@@ -72,7 +77,7 @@ npm ci
 npm run dev
 ```
 
-Visit `http://localhost:3000`, then choose **Explore demo**. Set `FRANQUIYA_API_URL` to the backend origin when it is not `http://localhost:8000`; Next.js proxies `/api/*` to that origin.
+Visit `http://localhost:3000`, then choose **Explore demo**. The Next.js server routes implement the read-only sample-data API. The Python backend can run separately for work on its wider API.
 
 ## Verification performed
 
@@ -80,7 +85,7 @@ Visit `http://localhost:3000`, then choose **Explore demo**. Set `FRANQUIYA_API_
 - Frontend: **14 Jest tests passed**.
 - Frontend: Next.js **15.5.27 production build passed** after a clean `npm ci`.
 - `npm audit --omit=dev` reports **0 production dependency vulnerabilities** after pinning production PostCSS and moving the animation helper to development dependencies. The full development/build dependency tree still reports 35 high advisories; this is not a claim that all dependencies are clean.
-- HTTP smoke check through the running Next.js proxy: login page returned 200; demo login returned a token; stock returned six products; dashboard totals matched; a demo stock update returned 403.
+- HTTP smoke check through Next.js server routes: demo login returned a token; stock returned six products; dashboard totals matched; a demo stock update returned 403.
 - Browser automation was unavailable in this environment, so the interactive UI was not verified in an automated browser.
 
 ## Presentation-video review
@@ -96,8 +101,8 @@ This review is based on the earlier inspection of local portfolio video files; i
 ## Evidence and limits
 
 - Code and test results come from the public [FranquiYA repository](https://github.com/nachopalmeri/FranquiYA).
-- The repository includes a Render Blueprint for a free API service. The demo uses synthetic in-memory data, so the Blueprint does not create a paid database. Free Render services may spin down when idle.
-- To deploy the frontend, import the repository into Vercel with project root `franquiYA/frontend` and set `FRANQUIYA_API_URL` to the deployed Render API origin in Preview and Production. Deployment still requires creating/linking provider projects and credentials.
-- No live deployment has been verified, and no real customer, staff usage, financial result, performance result, or production reliability has been established.
+- The demo frontend and API are deployed together on Vercel at [franqui-ya.vercel.app](https://franqui-ya.vercel.app); the verified deployment ran commit `675973f`. The new same-origin server route has built and passed local HTTP smoke checks; its deployment is pending.
+- The repository includes an optional Render Blueprint for the separate full Python API. It is not required by the hosted synthetic-data demo.
+- No real customer, staff usage, financial result, performance result, or production reliability has been established.
 - Other API domains are not yet hexagonal and are not enabled in the demo navigation.
 - Confirm personal ownership of particular features before making a first-person contribution claim.

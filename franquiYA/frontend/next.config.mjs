@@ -2,14 +2,6 @@
 const nextConfig = {
   reactStrictMode: true,
   outputFileTracingRoot: process.cwd(),
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: `${process.env.FRANQUIYA_API_URL || 'http://localhost:8000'}/api/:path*`,
-      },
-    ];
-  },
   async headers() {
     return [
       {

@@ -6,7 +6,7 @@ FranquiYA is a portfolio prototype for franchise operations. The inventory demo 
 
 - One-click demo entry; no shared demo password is shown.
 - Dashboard counts, stock list, search, filters, sorting, alerts, and CSV export.
-- Demo sessions are short-lived and read-only at the API boundary.
+- Demo access uses public fictional data; write requests are rejected at the API boundary.
 - The sample inventory lives in memory and never writes to the application database.
 
 The demo currently covers the dashboard and inventory slice. Other business areas remain outside the demo workflow and retain their existing implementation.
@@ -15,20 +15,33 @@ The demo currently covers the dashboard and inventory slice. Other business area
 
 ```mermaid
 flowchart LR
-  UI[Next.js UI] -->|HTTP| API[FastAPI stock routes]
+  UI[Next.js UI] -->|HTTP /api| API[Next.js server API adapter]
   API --> APP[Inventory application service]
   APP --> DOMAIN[Inventory domain rules]
   APP --> PORT[Product repository port]
-  PORT -. implemented by .-> SQL[SQLAlchemy repository]
   PORT -. implemented by .-> DEMO[In-memory sample repository]
-  AUTH[JWT identity] --> API
+  LOCAL[Local FastAPI adapter] --> PYAPP[Python InventoryService]
+  PYAPP --> PYDOMAIN[Python stock rules]
+  PYAPP --> PYPORT[Python repository port]
+  PYPORT --> SQL[SQLAlchemy repository]
+  PYPORT --> PYDEMO[Python in-memory adapter]
 ```
 
-The application service depends on the repository interface. The SQLAlchemy adapter maps database rows into domain products; the demo adapter returns fictional products. FastAPI is the driving adapter. The existing `/api/stock` paths and response fields remain compatible.
+The deployed demo uses a same-origin Next.js server API adapter, so it needs no separate backend host or CORS setup. Its application service depends on a repository interface and returns fictional, in-memory products. The local FastAPI backend has its own Python implementation of the inventory slice and keeps the same `/api/stock` contract.
 
 ## Run locally
 
-Start the backend in one terminal:
+The read-only presentation demo needs only the frontend:
+
+```powershell
+cd franquiYA/frontend
+npm ci
+npm run dev
+```
+
+Open `http://localhost:3000` and choose **Explore demo**. The frontend's `/api/*` server routes provide the read-only demo without a separate API process. Run the Python backend separately when working on its full API.
+
+For the Python API, start a separate terminal:
 
 ```powershell
 cd franquiYA/backend
@@ -39,28 +52,17 @@ $env:DEMO_MODE_ENABLED = 'true'
 .venv\Scripts\uvicorn main:app --reload --host 127.0.0.1 --port 8000
 ```
 
-Start the frontend in a second terminal:
-
-```powershell
-cd franquiYA/frontend
-npm ci
-npm run dev
-```
-
-Open `http://localhost:3000` and choose **Explore demo**. For a remote backend, set `FRANQUIYA_API_URL` to its origin before starting/building Next.js. The frontend proxies `/api/*` to that backend.
-
 Set `DEMO_MODE_ENABLED=false` to disable demo sessions. Always use a unique random `JWT_SECRET` outside local development. In Render, configure the secret as `JWT_SECRET` (the application reads that name).
 
 ## Deploy the demo
 
-The root `render.yaml` is a Blueprint for a free Render API service. It uses fictional in-memory inventory in the demo and does not provision a paid database. Free services can spin down while idle.
+The demo UI and API run together on Vercel at the existing `franqui-ya.vercel.app` production domain. The root `render.yaml` remains an optional Blueprint for a separate Python API service; it is not required by the hosted read-only demo. Free Render services can spin down while idle.
 
-1. Create a Render Blueprint from this repository and deploy `render.yaml`.
-2. Import the repository into Vercel with project root `franquiYA/frontend`.
-3. In Vercel Preview and Production settings, set `FRANQUIYA_API_URL` to the Render service origin (for example, `https://franquiya-api.onrender.com`).
-4. Deploy the frontend and open **Explore demo**. The frontend proxies `/api/*` to the configured API origin.
+1. Keep the Vercel project root at `franquiYA/frontend`.
+2. Push to `main`; the connected Vercel project builds and deploys the frontend and its `/api/*` server routes together.
+3. Open **Explore demo**. No separate API URL or CORS configuration is needed.
 
-Provider projects and credentials must exist before these steps can produce a live deployment. No hosted deployment is currently verified.
+The full database-backed API is still a separate service and is not used by this synthetic-data demo.
 
 ## Tests and security
 
