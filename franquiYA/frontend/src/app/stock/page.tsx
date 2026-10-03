@@ -14,9 +14,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Download, Plus, X } from 'lucide-react'
-import * as XLSX from 'xlsx'
+import { DemoModeBanner } from '@/components/layout/demo-mode-banner'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_URL = '/api'
 
 const CATEGORY_OPTIONS: { value: ProductCategory | 'all'; label: string }[] = [
   { value: 'all', label: 'Todas las categorías' },
@@ -50,7 +50,7 @@ export default function StockPage() {
   const [newProduct, setNewProduct] = useState({
     name: '',
     category: 'sabor_7.8kg' as ProductCategory,
-    unit: 'unidad',
+    unit: 'uni',
     current_stock: 0,
     min_stock: 5,
     unit_price: 0
@@ -119,21 +119,21 @@ export default function StockPage() {
     return filtered
   }, [products, search, categoryFilter, stockFilter, sortBy, sortOrder])
 
-  const exportToExcel = () => {
-    const data = filteredProducts.map(p => ({
-      Nombre: p.name,
-      Categoría: p.category,
-      Unidad: p.unit,
-      'Stock Actual': p.current_stock,
-      'Stock Mínimo': p.min_stock,
-      'Precio Unitario': p.unit_price,
-      Estado: p.current_stock <= 0 ? 'Crítico' : p.current_stock <= p.min_stock ? 'Bajo' : 'OK'
-    }))
-
-    const ws = XLSX.utils.json_to_sheet(data)
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, 'Stock')
-    XLSX.writeFile(wb, `grido-stock-${new Date().toISOString().split('T')[0]}.xlsx`)
+  const exportToCsv = () => {
+    const columns = ['Nombre', 'Categoria', 'Unidad', 'Stock actual', 'Stock minimo', 'Precio unitario', 'Estado']
+    const escape = (value: string | number) => `"${String(value).replaceAll('"', '""')}"`
+    const rows = filteredProducts.map(p => [
+      p.name, p.category, p.unit, p.current_stock, p.min_stock, p.unit_price,
+      p.current_stock <= 0 ? 'Critico' : p.current_stock <= p.min_stock ? 'Bajo' : 'OK'
+    ])
+    const csv = [columns, ...rows].map(row => row.map(escape).join(',')).join('\r\n')
+    const blob = new Blob(['\ufeff', csv], { type: 'text/csv;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `franquiya-stock-${new Date().toISOString().split('T')[0]}.csv`
+    link.click()
+    URL.revokeObjectURL(url)
   }
 
   const handleAddProduct = async () => {
@@ -158,7 +158,7 @@ export default function StockPage() {
         setNewProduct({
           name: '',
           category: 'sabor_7.8kg',
-          unit: 'unidad',
+          unit: 'uni',
           current_stock: 0,
           min_stock: 5,
           unit_price: 0
@@ -189,26 +189,27 @@ export default function StockPage() {
       <main className="flex-1 ml-64">
         <Header />
         <div className="p-6">
+          <div className="mb-5"><DemoModeBanner /></div>
           <div className="mb-6 flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-white">Stock</h1>
               <p className="text-gray-400">{filteredProducts.length} productos</p>
             </div>
             <div className="flex gap-2">
-              <Button 
+              {!user?.is_demo && <Button
                 onClick={() => setShowAddModal(true)}
                 className="bg-[#E31D2B] hover:bg-[#C41925]"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Agregar Producto
-              </Button>
+              </Button>}
               <Button 
-                onClick={exportToExcel} 
+                onClick={exportToCsv}
                 variant="outline"
                 className="border-white/10 text-white hover:bg-white/10"
               >
                 <Download className="mr-2 h-4 w-4" />
-                Exportar Excel
+                Exportar CSV
               </Button>
             </div>
           </div>
@@ -235,7 +236,7 @@ export default function StockPage() {
             </div>
           </div>
         </div>
-        <ChatWidget />
+        {!user?.is_demo && <ChatWidget />}
       </main>
 
       {/* Add Product Modal */}

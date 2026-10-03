@@ -9,7 +9,7 @@ import { ChatWidget } from '@/components/chat/chat-widget'
 import type { Invoice } from '@/lib/types'
 import { useAuth } from '@/components/layout/auth-provider'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_URL = '/api'
 
 export default function InvoicesPage() {
   const { loading: authLoading } = useAuth()

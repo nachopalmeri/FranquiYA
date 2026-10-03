@@ -20,7 +20,7 @@ import type {
   ExternalEvent
 } from './types';
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE = '/api';
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -44,7 +44,7 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
   });
 
   if (!response.ok) {
-    if (response.status === 401) {
+    if (response.status === 401 && endpoint !== '/auth/demo') {
       localStorage.removeItem('token');
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
@@ -59,6 +59,7 @@ async function fetchApi<T>(endpoint: string, options: RequestInit = {}): Promise
 
 export const api = {
   auth: {
+    demo: () => fetchApi<AuthResponse>('/auth/demo', { method: 'POST' }),
     login: (credentials: LoginCredentials) => 
       fetchApi<AuthResponse>('/auth/login', {
         method: 'POST',

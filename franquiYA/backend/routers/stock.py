@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
 from typing import List, Optional
 from pydantic import BaseModel
-from database import get_db
-from models.user import User
-from models.product import Product
+from adapters.inbound.fastapi_dependencies import get_inventory_service
+from application.inventory_service import InventoryService
+from domain.inventory import InventoryProduct, stock_alert_message
 from schemas import Product as ProductSchema, StockAlert, DashboardStats
 from auth import get_current_active_user
 
@@ -22,74 +21,38 @@ class ProductUpdate(BaseModel):
 @router.get("", response_model=List[ProductSchema])
 def list_products(
     category: Optional[str] = None,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user = Depends(get_current_active_user),
+    inventory: InventoryService = Depends(get_inventory_service),
 ):
-    query = db.query(Product).filter(Product.franchise_id == current_user.franchise_id)
-    if category:
-        query = query.filter(Product.category == category)
-    return query.all()
+    return inventory.list_products(current_user.franchise_id, category)
 
 @router.get("/alerts", response_model=List[StockAlert])
 def get_stock_alerts(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user = Depends(get_current_active_user),
+    inventory: InventoryService = Depends(get_inventory_service),
 ):
-    products = db.query(Product).filter(
-        Product.franchise_id == current_user.franchise_id,
-        Product.is_active == True
-    ).all()
-    
-    alerts = []
-    for product in products:
-        if product.current_stock <= 0:
-            alerts.append(StockAlert(
-                product=ProductSchema.model_validate(product),
-                status="critical",
-                message="Sin stock - Reponer urgente"
-            ))
-        elif product.current_stock <= product.min_stock:
-            alerts.append(StockAlert(
-                product=ProductSchema.model_validate(product),
-                status="low",
-                message=f"Stock bajo - Mínimo: {product.min_stock}"
-            ))
-    
-    return alerts
+    return [StockAlert(product=p, status=p.stock_status, message=stock_alert_message(p)) for p in inventory.alerts(current_user.franchise_id)]
 
 @router.get("/{product_id}", response_model=ProductSchema)
 def get_product(
     product_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user = Depends(get_current_active_user),
+    inventory: InventoryService = Depends(get_inventory_service),
 ):
-    product = db.query(Product).filter(
-        Product.id == product_id,
-        Product.franchise_id == current_user.franchise_id
-    ).first()
+    product = inventory.get_product(product_id, current_user.franchise_id)
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
-    return ProductSchema.model_validate(product)
+    return product
 
 @router.put("/{product_id}", response_model=ProductSchema)
 def update_product(
     product_id: int,
     data: ProductUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_active_user)
+    current_user = Depends(get_current_active_user),
+    inventory: InventoryService = Depends(get_inventory_service),
 ):
-    product = db.query(Product).filter(
-        Product.id == product_id,
-        Product.franchise_id == current_user.franchise_id
-    ).first()
-    
+    product = inventory.update_product(product_id, current_user.franchise_id, data.model_dump(exclude_unset=True))
     if not product:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
     
-    update_data = data.model_dump(exclude_unset=True)
-    for key, value in update_data.items():
-        setattr(product, key, value)
-    
-    db.commit()
-    db.refresh(product)
-    return ProductSchema.model_validate(product)
+    return product

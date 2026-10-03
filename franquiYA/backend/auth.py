@@ -10,7 +10,10 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models.user import User
 
-SECRET_KEY = os.getenv("JWT_SECRET", "franquiya-local-dev-secret-change-me")
+SECRET_KEY = os.getenv("JWT_SECRET")
+if not SECRET_KEY and os.getenv("ENVIRONMENT", "development").lower() == "production":
+    raise RuntimeError("JWT_SECRET must be set in production")
+SECRET_KEY = SECRET_KEY or "franquiya-local-dev-secret-change-me"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24
 
@@ -108,6 +111,14 @@ def get_current_user(
     except JWTError:
         raise credentials_exception
     
+    if payload.get("demo") is True and os.getenv("DEMO_MODE_ENABLED", "false").lower() == "true":
+        return User(
+            id=0, email="demo@franquiya.com", name="Demo Franquiciado",
+            hashed_password="", role="admin", user_type="franquiciado",
+            franchise_id=0, is_active=True, requires_setup=False,
+            completed_tour=True,
+        )
+
     user = db.query(User).filter(User.email == email).first()
     if user is None:
         raise credentials_exception
@@ -118,6 +129,16 @@ def get_current_active_user(current_user: User = Depends(get_current_user)) -> U
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+
+def is_demo_request(request: Request) -> bool:
+    """Identify signed demo tokens without trusting a client supplied flag."""
+    try:
+        token = get_token_from_header_or_cookie(request)
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        return payload.get("demo") is True
+    except (JWTError, HTTPException):
+        return False
 
 
 def get_admin_user(current_user: User = Depends(get_current_active_user)) -> User:

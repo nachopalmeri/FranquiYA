@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { CheckCircle2, RotateCcw } from 'lucide-react'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_URL = '/api'
 
 const CATEGORIES: { value: ProductCategory; label: string; icon: string }[] = [
   { value: 'sabor_7.8kg', label: 'Sabores a Granel', icon: '🍦' },

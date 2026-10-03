@@ -9,6 +9,7 @@ interface AuthContextType {
   user: User | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
+  demoLogin: () => Promise<void>
   logout: () => void
   refreshUser: () => Promise<User | null>
 }
@@ -25,6 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const userData = await api.auth.me()
       setUser(userData)
+      if (userData.is_demo && pathname !== '/' && pathname !== '/stock') router.replace('/')
       return userData
     } catch {
       localStorage.removeItem('token')
@@ -47,6 +49,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userData = await api.auth.me()
         setUser(userData)
+        if (userData.is_demo && pathname !== '/' && pathname !== '/stock') router.replace('/')
       } catch {
         localStorage.removeItem('token')
         if (pathname !== '/login') {
@@ -89,6 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const demoLogin = async () => {
+    const response = await api.auth.demo()
+    localStorage.setItem('token', response.access_token)
+    setUser(response.user)
+    router.push('/')
+  }
+
   const logout = () => {
     localStorage.removeItem('token')
     setUser(null)
@@ -96,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, refreshUser }}>
+    <AuthContext.Provider value={{ user, loading, login, demoLogin, logout, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

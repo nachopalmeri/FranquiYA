@@ -9,6 +9,7 @@ export interface User {
   is_active: boolean;
   requires_setup?: boolean;
   completed_tour?: boolean;
+  is_demo?: boolean;
 }
 
 export interface Franchise {

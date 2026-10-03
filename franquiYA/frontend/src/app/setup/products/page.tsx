@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Package, Edit3, CheckCircle2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_URL = '/api'
 
 export default function SetupProductsPage() {
   const router = useRouter()

@@ -23,6 +23,7 @@ import {
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
+import { useAuth } from '@/components/layout/auth-provider'
 
 // Simplified sidebar - show all items, load fast
 const NAV_ITEMS = [
@@ -45,6 +46,7 @@ interface SidebarProps {
 }
 
 export function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
+  const { user } = useAuth()
   const pathname = usePathname()
   const [franchiseName, setFranchiseName] = useState('Mi Negocio')
 
@@ -106,7 +108,7 @@ export function Sidebar({ isOpen = true, onToggle }: SidebarProps) {
 
           {/* Navigation - simple, fast */}
           <nav className="flex-1 space-y-1 p-3 overflow-y-auto">
-            {NAV_ITEMS.map((item) => {
+            {(user?.is_demo ? NAV_ITEMS.filter((item) => ['/', '/stock'].includes(item.href)) : NAV_ITEMS).map((item) => {
               const isActive = pathname === item.href
               return (
                 <Link

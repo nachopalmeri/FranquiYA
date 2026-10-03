@@ -10,7 +10,7 @@ import { getWeatherInsight, getWeatherIcon } from '@/lib/utils'
 import { themes, type ThemeName } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_URL = '/api'
 
 export function Header() {
   const [weather, setWeather] = useState<WeatherData | null>(null)

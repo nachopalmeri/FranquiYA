@@ -101,7 +101,7 @@ export default function OnboardingPage() {
 
       // Load sample products if requested
       if (data.loadSampleProducts) {
-        await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'}/auth/setup/products`, {
+        await fetch(`/api/auth/setup/products`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

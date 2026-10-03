@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status, Response
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from datetime import datetime
+from datetime import timedelta
+import os
 from database import get_db
 from models.user import User
 from models.franchise import Franchise
@@ -17,6 +19,26 @@ from auth import (
 from seed import PRODUCTS_DATA
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
+
+@router.post("/demo", response_model=Token)
+def start_demo(response: Response = None):
+    """Start a no-password, short-lived read-only demo session."""
+    if os.getenv("DEMO_MODE_ENABLED", "false").lower() != "true":
+        raise HTTPException(status_code=404, detail="Demo mode is disabled")
+    access_token = create_access_token(
+        data={"sub": "demo@franquiya.com", "demo": True},
+        expires_delta=timedelta(hours=2),
+    )
+    user = UserSchema(
+        id=0, email="demo@franquiya.com", name="Demo Franquiciado",
+        role="admin", user_type="franquiciado", franchise_id=0,
+        franchise_name="FranquiYA Demo", is_active=True,
+        requires_setup=False, completed_tour=True, is_demo=True,
+    )
+    if response:
+        response.set_cookie(key="token", value=access_token, httponly=True, secure=True, samesite="lax", max_age=7200)
+    return Token(access_token=access_token, token_type="bearer", user=user)
 
 def create_token_response(user: User, db: Session, response: Response = None):
     """Helper to create token response with cookie"""

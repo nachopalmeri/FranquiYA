@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { IceCreamBowl, Mail, Lock, Eye, EyeOff } from 'lucide-react'
+import { IceCreamBowl, Mail, Lock, Eye, EyeOff, FlaskConical } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -15,7 +15,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { login } = useAuth()
+  const { login, demoLogin } = useAuth()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -68,7 +68,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="••••••••"
+              placeholder="Your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="border-[#E8DFD3] bg-[#FFF8F0] pl-10 pr-10 text-[#4A3728] placeholder:text-[#8B7355]"
@@ -110,10 +110,11 @@ export default function LoginPage() {
             </Button>
           </form>
 
-          <div className="mt-6 rounded-xl bg-[#F5E6D3] border border-[#E8DFD3] p-4">
-            <p className="text-center text-sm text-[#8B7355]">
-              Demo: <span className="font-mono font-semibold text-[#4A3728]">admin@example.com</span> / <span className="font-mono font-semibold text-[#4A3728]">admin123</span>
-            </p>
+          <div className="mt-6 rounded-xl bg-[#F5E6D3] border border-[#E8DFD3] p-4 space-y-3">
+            <p className="text-center text-sm text-[#8B7355]">Explore a read-only demo with fictional sample data.</p>
+            <Button type="button" variant="outline" className="w-full border-[#8B7355] text-[#4A3728]" onClick={async () => { setLoading(true); setError(''); try { await demoLogin() } catch { setError('The demo is temporarily unavailable.') } finally { setLoading(false) } }} disabled={loading}>
+              <FlaskConical className="mr-2 h-4 w-4" /> Explore demo
+            </Button>
           </div>
 
           <div className="mt-6 text-center">

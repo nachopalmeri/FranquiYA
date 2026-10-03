@@ -12,8 +12,9 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Search, FileText, Smartphone, BarChart3, TrendingUp, Users, Calendar, Clock } from 'lucide-react'
+import { DemoModeBanner } from '@/components/layout/demo-mode-banner'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_URL = '/api'
 
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth()
@@ -87,6 +88,7 @@ export default function DashboardPage() {
       <main className="flex-1 ml-64">
         <Header />
         <div className="p-6 space-y-6">
+          <DemoModeBanner />
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-white font-heading mb-1">
               Dashboard
@@ -143,6 +145,12 @@ export default function DashboardPage() {
                   Acciones Rápidas
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-2">
+                  {user?.is_demo ? (
+                    <a href="/stock" className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all hover:bg-white/10">
+                      <BarChart3 className="h-5 w-5 text-amber-400" />
+                      <span className="font-medium text-white">Explore sample stock</span>
+                    </a>
+                  ) : <>
                   <a
                     href="/invoices"
                     className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
@@ -203,6 +211,7 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">Horario semanal</p>
                     </div>
                   </a>
+
                   <a
                     href="/calendar"
                     className="group flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-4 transition-all duration-200 hover:bg-white/10 hover:border-white/20"
@@ -215,12 +224,13 @@ export default function DashboardPage() {
                       <p className="text-sm text-gray-400">Eventos externos</p>
                     </div>
                   </a>
+                  </>}
                 </div>
               </CardContent>
             </Card>
           </div>
         </div>
-        <ChatWidget />
+        {!user?.is_demo && <ChatWidget />}
       </main>
     </div>
   )

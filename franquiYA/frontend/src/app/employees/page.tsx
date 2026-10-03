@@ -152,7 +152,6 @@ export default function EmployeesPage() {
                   className="border-white/10 bg-white/5 text-white"
                 />
               </div>
-              </div>
               <Button type="submit" className="w-full bg-[#E31D2B] hover:bg-[#C41925] text-white">
                 Crear Empleado
               </Button>

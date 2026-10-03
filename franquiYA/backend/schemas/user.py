@@ -22,6 +22,7 @@ class User(UserBase):
     is_active: bool
     requires_setup: bool = False
     completed_tour: bool = False
+    is_demo: bool = False
 
     class Config:
         from_attributes = True

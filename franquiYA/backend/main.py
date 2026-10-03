@@ -5,6 +5,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
+from auth import is_demo_request
 from database import engine, Base, get_db
 from models.user import User
 from models.franchise import Franchise
@@ -86,6 +87,14 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class DemoReadOnlyMiddleware(BaseHTTPMiddleware):
+    """Demo JWTs can read sample data but cannot mutate any API state."""
+    async def dispatch(self, request: Request, call_next):
+        if request.method not in {"GET", "HEAD", "OPTIONS"} and is_demo_request(request):
+            return JSONResponse(status_code=403, content={"detail": "Demo mode is read-only"})
+        return await call_next(request)
+
+
 # CORS - explicit origins (not wildcard for production)
 _env_cors = os.getenv("CORS_ORIGINS", "")
 if _env_cors:
@@ -106,6 +115,7 @@ app.add_middleware(
 )
 
 app.add_middleware(SecurityHeadersMiddleware)
+app.add_middleware(DemoReadOnlyMiddleware)
 app.add_middleware(RateLimitMiddleware, requests_per_minute=100)
 
 app.include_router(auth_router, prefix="/api")
@@ -143,9 +153,10 @@ def health_check():
 
 @app.on_event("startup")
 def startup_event():
-    from seed import seed_database
-    db = next(get_db())
-    seed_database(db)
+    if os.getenv("ENVIRONMENT", "development").lower() != "production":
+        from seed import seed_database
+        db = next(get_db())
+        seed_database(db)
 
 
 if __name__ == "__main__":

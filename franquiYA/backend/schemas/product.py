@@ -14,7 +14,7 @@ class ProductBase(BaseModel):
     @field_validator('unit')
     @classmethod
     def validate_unit(cls, v):
-        valid_units = ['7.8kg', '1lt', '1kg', '2kg', '3kg', '4kg', '5kg', 'uni', 'pack', 'cm3']
+        valid_units = ['7.8kg', '1lt', '1kg', '2kg', '3kg', '4kg', '5kg', 'uni', 'unidad', 'unidades', 'pack', 'caja', 'kg', 'g', 'l', 'lt', 'ml', 'cm3']
         if v.lower() not in valid_units:
             raise ValueError(f'Unidad inválida. Opciones: {", ".join(valid_units)}')
         return v

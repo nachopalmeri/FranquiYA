@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: franquiya-api
+    runtime: python
+    plan: free
+    rootDir: franquiYA/backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true
+      - key: ENVIRONMENT
+        value: production
+      - key: DEMO_MODE_ENABLED
+        value: true
