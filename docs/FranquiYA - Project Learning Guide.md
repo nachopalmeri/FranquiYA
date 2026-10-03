@@ -12,7 +12,7 @@ updated: 2026-10-03
 
 ## What a presenter can show
 
-1. Open the login page and choose **Explore demo**. No demo password is displayed.
+1. Open the login page and watch the optional 8-second dashboard preview, then choose **Entrar al demo**. The preview shows illustrative figures from an older version; the live demo uses fictional data. No demo password is displayed.
 2. The dashboard loads sample inventory counts and stock alerts from the API.
 3. Open Stock, search and filter products, sort them, and export a CSV that spreadsheet apps can open.
 4. Explain that sample values are fictional and that demo sessions cannot write to the API.

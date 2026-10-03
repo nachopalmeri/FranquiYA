@@ -4,6 +4,7 @@ FranquiYA is a portfolio prototype for franchise operations. The inventory demo 
 
 ## What works in the presentation demo
 
+- The login page offers an optional short dashboard preview; its older figures are labelled illustrative.
 - One-click demo entry; no shared demo password is shown.
 - Dashboard counts, stock list, search, filters, sorting, alerts, and CSV export.
 - Demo access uses public fictional data; write requests are rejected at the API boundary.

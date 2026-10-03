@@ -10,6 +10,8 @@ The project was built with AI-assisted development and manual review, with the g
 
 ## Main features
 
+- Login entry page with an optional short dashboard video preview; its older figures are labelled illustrative
+- One-click read-only demo using fictional sample data
 - Dashboard with operational KPIs
 - Stock alerts and inventory views
 - Invoice upload and processing flow
